@@ -12,10 +12,7 @@ import qualified Data.Text as T
 type User = T.Text
 
 -- |A data type representing a message
-data UserMessage =
-    UserMessage { userMsgText   :: T.Text
-                , userMsgSender :: User
-                } deriving Show
+newtype UserMessage = UserMessage (T.Text, MessageContext) deriving Show
 
 -- Should probably be in another module
 -- |A data type representing the IRC State
@@ -23,7 +20,9 @@ data IRCState =
     IRCState { userMessages :: M.Map User [UserMessage] } deriving Show
 
 data MessageContext =
-    MessageContext { msgContextSender :: T.Text
+    MessageContext { msgContextSenderNick :: T.Text
+                   , msgContextSenderFull :: T.Text
+                   , msgContextChannel :: T.Text
                    , msgContextTime :: UTCTime
                    } deriving Show
 
@@ -45,8 +44,14 @@ getMessageContext = gets messageContext
 getUserMessages :: IRCParser (M.Map User [UserMessage])
 getUserMessages = gets $ userMessages . ircState
 
-getMsgContextSender :: IRCParser T.Text
-getMsgContextSender = gets $ msgContextSender . messageContext
+getMsgContextSenderNick :: IRCParser T.Text
+getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
+
+getMsgContextSenderFull :: IRCParser T.Text
+getMsgContextSenderFull = gets $ msgContextSenderFull . messageContext
+
+getMsgContextChannel :: IRCParser T.Text
+getMsgContextChannel = gets $ msgContextChannel . messageContext
 
 getMsgContextTime :: IRCParser UTCTime
 getMsgContextTime = gets $ msgContextTime . messageContext
@@ -67,10 +72,20 @@ putUserMessages new = do
     old <- getIRCState
     putIRCState $ old { userMessages = new }
 
-putMsgContextSender :: T.Text -> IRCParser ()
-putMsgContextSender new = do
+putMsgContextSenderNick :: T.Text -> IRCParser ()
+putMsgContextSenderNick new = do
     old <- getMessageContext
-    putMessageContext $ old { msgContextSender = new }
+    putMessageContext $ old { msgContextSenderNick = new }
+
+putMsgContextSenderFull :: T.Text -> IRCParser ()
+putMsgContextSenderFull new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextSenderFull = new }
+
+putMsgContextChannel :: T.Text -> IRCParser ()
+putMsgContextChannel new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextChannel = new }
 
 putMsgContextTime :: UTCTime -> IRCParser ()
 putMsgContextTime new = do
@@ -94,6 +109,7 @@ runIRCParser p s t st =
 -- |A data type representing an action the irc bot can take, intended
 -- to be run by runAct.
 data IRCAction = PrivMsg { privMsgText :: T.Text }
+               | Pong
                | Leave
                | Quit
                | NoAction
@@ -101,15 +117,20 @@ data IRCAction = PrivMsg { privMsgText :: T.Text }
 
 -- | Represents an message
 data MessageType = PrivateMessage
+                 | PingMessage
                  | OtherMessage
 
 parseMessageType :: Parsec T.Text () MessageType
 parseMessageType = do
-  parseWord
-  msgType <- parseWord
-  case msgType of
-      "PRIVMSG" -> return PrivateMessage
-      _         -> return OtherMessage
+  isPing <- parseWord
+  case isPing of
+    "PING" -> return PingMessage
+    _      -> do 
+      msgType <- parseWord
+      case msgType of
+          "PRIVMSG" -> return PrivateMessage
+          "PING"    -> return PingMessage
+          _         -> return OtherMessage
 
 parseMessage :: T.Text -> IRCParserState -> (IRCAction, IRCParserState)
 parseMessage str oldState =
@@ -118,6 +139,7 @@ parseMessage str oldState =
     Right t ->
       let parser = case t of
             PrivateMessage -> parsePrivateMessage
+            PingMessage    -> return Pong
             OtherMessage   -> return NoAction
       in case runIRCParser parser "" str oldState of
             Left _            -> (NoAction, oldState)
@@ -125,20 +147,42 @@ parseMessage str oldState =
 
 parsePrivateMessage :: IRCParser IRCAction
 parsePrivateMessage = do
-  t <- getMsgContextTime
-  let time = T.pack $ show t
   char ':'
   nick <- parseTill '!'
-  parseWord
+  putMsgContextSenderNick nick
+  senderRest <- parseWord
+  putMsgContextSenderFull (T.concat [nick,senderRest])
   parseWord
   chan <- parseWord
+  putMsgContextChannel chan
   char ':'
   command <- parseWord
-  text <- fmap T.pack $ many anyChar
   case command of
-    "!id" -> return $ PrivMsg $ T.concat [nick, " said \"", text
-                                         ,"\" in ", chan, " at ", time]
-    _     -> return $ NoAction
+    "!id"   -> parseCommandId
+    "!tell" -> parseCommandTell
+    _       -> return $ NoAction
+
+parseCommandId :: IRCParser IRCAction
+parseCommandId = do 
+  text <- fmap T.pack $ many anyChar
+  nick <- getMsgContextSenderNick
+  chan <- getMsgContextChannel
+  t    <- getMsgContextTime
+  let time = T.pack $ show t
+  return $ PrivMsg $ T.concat [nick, " said \"", text
+                              ,"\" in ", chan, " at ", time]
+
+parseCommandTell :: IRCParser IRCAction
+parseCommandTell = do
+  recipient <- parseWord
+  msg <- fmap T.pack $ many anyChar
+
+  cntxt <- getMessageContext
+  let userMsg = UserMessage (msg, cntxt)
+
+  userMsgs <- getUserMessages
+  putUserMessages (M.insertWith (++) recipient [userMsg] userMsgs)
+  return $ PrivMsg "I will tell it them, as soon as i see them"
 
 parseWord :: Monad m => ParsecT T.Text u m T.Text
 parseWord = parseTill ' '

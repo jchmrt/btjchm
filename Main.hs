@@ -28,31 +28,29 @@ main = do
     write h (T.pack "NICK") nick
     write h (T.pack "USER") usermsg
     write h (T.pack "JOIN") chan
-    listen h
+    let emptyState = (IRCState M.empty)
+    listen h emptyState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
 write h s t = do
     TIO.hPutStr h $ T.concat [s, T.pack " ", t, T.pack "\r\n"]
     TIO.putStrLn $ T.concat [T.pack ">  ", s, T.pack " ", t]
 
-listen :: Handle -> IO ()
-listen h = forever $ do
+listen :: Handle -> IRCState -> IO ()
+listen h st = do
     t <- TIO.hGetLine h
     let s = T.init t
-    if ping s then pong s else eval h s
+    nst <- eval h s st
     TIO.putStrLn s
-  where
-    forever a = a >> forever a
-    ping x = T.pack "PING :" `T.isPrefixOf` x
-    pong x = write h (T.pack "PONG") $ T.concat [T.pack ":", T.drop 6 x]
+    listen h nst
 
-eval :: Handle -> T.Text -> IO ()
-eval h s = do
+eval :: Handle -> T.Text -> IRCState -> IO IRCState
+eval h s ircState = do
   time <- getCurrentTime
-  let parserState = IRCParserState (IRCState M.empty)
-                                   (MessageContext "" "" "" time)
-  runAct h $ fst $ parseMessage s parserState
-                          
+  let parserState = IRCParserState ircState (MessageContext "" "" "" time) 
+      (act, (IRCParserState newIrcState _)) = parseMessage s parserState
+  runAct h act
+  return newIrcState
 
 runAct :: Handle -> IRCAction -> IO ()
 runAct h (PrivMsg t) = privmsg h t
