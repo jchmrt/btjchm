@@ -20,7 +20,7 @@ data UserMessage =
 -- Should probably be in another module
 -- |A data type representing the IRC State
 data IRCState =
-    IRCState { messages :: M.Map User [UserMessage] } deriving Show
+    IRCState { userMessages :: M.Map User [UserMessage] } deriving Show
 
 data MessageContext =
     MessageContext { msgContextSender :: T.Text
@@ -33,6 +33,49 @@ data IRCParserState =
     IRCParserState { ircState :: IRCState
                    , messageContext :: MessageContext
                    } deriving Show
+
+-- Getters, because I cant get ghci to work on arm -> so no TemplateHaskell,
+-- which means I can't use lenses, and this is my workaround.
+getIRCState :: IRCParser IRCState
+getIRCState = gets ircState
+
+getMessageContext :: IRCParser MessageContext
+getMessageContext = gets messageContext
+
+getUserMessages :: IRCParser (M.Map User [UserMessage])
+getUserMessages = gets $ userMessages . ircState
+
+getMsgContextSender :: IRCParser T.Text
+getMsgContextSender = gets $ msgContextSender . messageContext
+
+getMsgContextTime :: IRCParser UTCTime
+getMsgContextTime = gets $ msgContextTime . messageContext
+
+-- Putters, same reason
+putIRCState :: IRCState -> IRCParser ()
+putIRCState new = do 
+    old <- get
+    put $ old { ircState = new }
+
+putMessageContext :: MessageContext -> IRCParser ()
+putMessageContext new = do 
+    old <- get
+    put $ old { messageContext = new }
+
+putUserMessages :: M.Map User [UserMessage] -> IRCParser ()
+putUserMessages new = do 
+    old <- getIRCState
+    putIRCState $ old { userMessages = new }
+
+putMsgContextSender :: T.Text -> IRCParser ()
+putMsgContextSender new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextSender = new }
+
+putMsgContextTime :: UTCTime -> IRCParser ()
+putMsgContextTime new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextTime = new }
 
 -- |The IRCParser Monad, used for parsing messages. Incorporates the
 -- State Monad and the Parsec Monad.
@@ -82,8 +125,8 @@ parseMessage str oldState =
 
 parsePrivateMessage :: IRCParser IRCAction
 parsePrivateMessage = do
-  st <- get
-  let time = "undefined"
+  t <- getMsgContextTime
+  let time = T.pack $ show t
   char ':'
   nick <- parseTill '!'
   parseWord
