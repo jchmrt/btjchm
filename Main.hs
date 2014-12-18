@@ -50,12 +50,9 @@ eval :: Handle -> T.Text -> IO ()
 eval h s = do
   time <- getCurrentTime
   let parserState = IRCParserState (IRCState M.empty)
-                                   (MessageContext "" time)
+                                   (MessageContext "" "" "" time)
   runAct h $ fst $ parseMessage s parserState
                           
-defaultIRCParserState = IRCParserState
-                        (IRCState M.empty)
-                        (MessageContext undefined undefined)
 
 runAct :: Handle -> IRCAction -> IO ()
 runAct h (PrivMsg t) = privmsg h t
