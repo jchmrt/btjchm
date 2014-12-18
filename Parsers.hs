@@ -1,9 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
 module Parsers where
 
-import Control.Lens
 import Control.Monad.State.Lazy
+import Control.Monad.Identity
 import Data.Time
 import Text.Parsec
 import qualified Data.Map as M
@@ -14,30 +13,26 @@ type User = T.Text
 
 -- |A data type representing a message
 data UserMessage =
-    UserMessage { _userMsgText   :: T.Text
-                , _userMsgSender :: User
+    UserMessage { userMsgText   :: T.Text
+                , userMsgSender :: User
                 } deriving Show
-makeLenses ''UserMessage
 
 -- Should probably be in another module
 -- |A data type representing the IRC State
 data IRCState =
-    IRCState { _messages :: M.Map User [UserMessage] } deriving Show
-makeLenses ''IRCState
+    IRCState { messages :: M.Map User [UserMessage] } deriving Show
 
 data MessageContext =
-    MessageContext { _msgContextSender :: T.Text
-                   , _msgContextTime :: UTCTime
+    MessageContext { msgContextSender :: T.Text
+                   , msgContextTime :: UTCTime
                    } deriving Show
-makeLenses ''MessageContext
 
 -- |A data type representing the state of the IRC Parser as wel as the
 -- whole IRC State.
 data IRCParserState =
-    IRCParserState { _ircState :: IRCState
-                   , _messageContext :: MessageContext
+    IRCParserState { ircState :: IRCState
+                   , messageContext :: MessageContext
                    } deriving Show
-makeLenses ''IRCParserState
 
 -- |The IRCParser Monad, used for parsing messages. Incorporates the
 -- State Monad and the Parsec Monad.
@@ -88,8 +83,7 @@ parseMessage str oldState =
 parsePrivateMessage :: IRCParser IRCAction
 parsePrivateMessage = do
   st <- get
-  let time = T.pack $ show 
-             $ view (messageContext . msgContextTime) st
+  let time = "undefined"
   char ':'
   nick <- parseTill '!'
   parseWord
