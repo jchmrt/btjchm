@@ -95,6 +95,7 @@ parsePrivateMessage = do
   case command of
     "!id" -> return $ PrivMsg $ T.concat [nick, " said \"", text
                                          ,"\" in ", chan, " at ", time]
+    _     -> return $ NoAction
 
 parseWord :: Monad m => ParsecT T.Text u m T.Text
 parseWord = parseTill ' '
