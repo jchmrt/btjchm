@@ -60,7 +60,9 @@ eval h s ircSt = do
   time <- getCurrentTime
   let parserState = IRCParserState ircSt (MessageContext "" "" "" time) 
       (act, IRCParserState newIrcState _) = parseMessage s parserState
-  runAct h act
+  case act of
+    Pong -> pong h s
+    _    -> runAct h act
   return newIrcState
 
 runAct :: Handle -> IRCAction -> IO ()
@@ -69,3 +71,6 @@ runAct _ _           = return ()
 
 privmsg :: Handle -> T.Text -> IO ()
 privmsg h s = write h (T.pack "PRIVMSG ") $ T.concat [chan,T.pack " :",s]
+
+pong :: Handle -> T.Text -> IO ()
+pong h s = write h (T.pack "PONG") $ T.concat [":",T.drop 6 s]
