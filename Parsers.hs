@@ -87,6 +87,7 @@ parseMessageType = do
           "353"     -> return NicksMessage
           "NICK"    -> return NickMessage
           "PART"    -> return PartMessage
+          "QUIT"    -> return PartMessage
           "JOIN"    -> return JoinMessage
           "PING"    -> return PingMessage
           _         -> return OtherMessage
