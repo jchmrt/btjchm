@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Parsers ( User
+module Parsers ( User(..)
                , UserMessage(..)
                , IRCState(..)
                , MessageContext(..)
@@ -25,13 +25,15 @@ newtype UserMessage = UserMessage (T.Text, MessageContext) deriving Show
 -- Should probably be in another module
 -- |A data type representing the IRC State
 data IRCState =
-    IRCState { userMessages :: M.Map User [UserMessage] } deriving Show
+    IRCState { userMessages :: M.Map User [UserMessage] 
+             , online       :: [User]
+             } deriving Show
 
 data MessageContext =
     MessageContext { msgContextSenderNick :: T.Text
                    , msgContextSenderFull :: T.Text
-                   , msgContextChannel :: T.Text
-                   , msgContextTime :: UTCTime
+                   , msgContextChannel    :: T.Text
+                   , msgContextTime       :: UTCTime
                    } deriving Show
 
 -- |A data type representing the state of the IRC Parser as wel as the
@@ -66,6 +68,10 @@ data IRCAction = PrivMsg { privMsgText :: T.Text }
 
 -- | Represents an message
 data MessageType = PrivateMessage
+                 | NicksMessage
+                 | NickMessage
+                 | PartMessage
+                 | JoinMessage
                  | PingMessage
                  | OtherMessage
 
@@ -78,6 +84,10 @@ parseMessageType = do
       msgType <- parseWord
       case msgType of
           "PRIVMSG" -> return PrivateMessage
+          "353"     -> return NicksMessage
+          "NICK"    -> return NickMessage
+          "PART"    -> return PartMessage
+          "JOIN"    -> return JoinMessage
           "PING"    -> return PingMessage
           _         -> return OtherMessage
 
@@ -88,6 +98,10 @@ parseMessage str oldState =
     Right t ->
       let parser = case t of
             PrivateMessage -> parsePrivateMessage
+            NicksMessage   -> parseNicksMessage >> return NoAction
+            NickMessage    -> parseNickMessage >> return NoAction
+            PartMessage    -> parsePartMessage >> return NoAction
+            JoinMessage    -> parseJoinMessage >> return NoAction
             PingMessage    -> return Pong
             OtherMessage   -> return NoAction
       in case runIRCParser parser "" str oldState of
@@ -133,8 +147,46 @@ parseCommandTell = do
   putUserMessages (M.insertWith (++) recipient [userMsg] userMsgs)
   return $ PrivMsg "I will tell it them, as soon as i see them"
 
+parseNicksMessage :: IRCParser ()
+parseNicksMessage = do
+  parseWord
+  parseWord
+  parseWord
+  parseWord
+  parseWord
+  char ':'
+  nicks <- many parseNick
+  mapM_ addOnlineUser nicks
+
+parseNick :: IRCParser User
+parseNick = do
+  try (string "@") <|> try (string "+") <|> return ""
+  parseWord
+  
+parseNickMessage :: IRCParser ()
+parseNickMessage = do
+  oldNick <- parseTill '!'
+  parseWord
+  parseWord
+  char ':'
+  newNick <- parseWord
+  removeOnlineUser oldNick
+  addOnlineUser newNick
+
+parsePartMessage :: IRCParser ()
+parsePartMessage = do
+  char ':'
+  nick <- parseTill '!'
+  removeOnlineUser nick
+
+parseJoinMessage :: IRCParser ()
+parseJoinMessage = do
+  char ':'
+  nick <- parseTill '!'
+  addOnlineUser nick
+
 parseWord :: Monad m => ParsecT T.Text u m T.Text
-parseWord = parseTill ' '
+parseWord = try (parseTill ' ') <|> T.pack <$> many1 anyChar
 parseTill :: Monad m => Char -> ParsecT T.Text u m T.Text
 parseTill c = T.pack <$> manyTill anyChar (try (char c))
 
@@ -148,6 +200,9 @@ getMessageContext = gets messageContext
 
 getUserMessages :: IRCParser (M.Map User [UserMessage])
 getUserMessages = gets $ userMessages . ircState
+
+getOnline :: IRCParser [User]
+getOnline = gets $ online . ircState
 
 getMsgContextSenderNick :: IRCParser T.Text
 getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
@@ -164,35 +219,51 @@ getMsgContextTime = gets $ msgContextTime . messageContext
 -- Putters, same reason
 putIRCState :: IRCState -> IRCParser ()
 putIRCState new = do 
-    old <- get
-    put $ old { ircState = new }
+  old <- get
+  put $ old { ircState = new }
 
 putMessageContext :: MessageContext -> IRCParser ()
 putMessageContext new = do 
-    old <- get
-    put $ old { messageContext = new }
+  old <- get
+  put $ old { messageContext = new }
 
 putUserMessages :: M.Map User [UserMessage] -> IRCParser ()
 putUserMessages new = do 
-    old <- getIRCState
-    putIRCState $ old { userMessages = new }
+  old <- getIRCState
+  putIRCState $ old { userMessages = new }
+
+putOnline :: [User] -> IRCParser ()
+putOnline new = do
+  old <- getIRCState
+  putIRCState $ old { online = new }
 
 putMsgContextSenderNick :: T.Text -> IRCParser ()
 putMsgContextSenderNick new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextSenderNick = new }
+  old <- getMessageContext
+  putMessageContext $ old { msgContextSenderNick = new }
 
 putMsgContextSenderFull :: T.Text -> IRCParser ()
 putMsgContextSenderFull new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextSenderFull = new }
+  old <- getMessageContext
+  putMessageContext $ old { msgContextSenderFull = new }
 
 putMsgContextChannel :: T.Text -> IRCParser ()
 putMsgContextChannel new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextChannel = new }
+  old <- getMessageContext
+  putMessageContext $ old { msgContextChannel = new }
 
 putMsgContextTime :: UTCTime -> IRCParser ()
 putMsgContextTime new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextTime = new }
+  old <- getMessageContext
+  putMessageContext $ old { msgContextTime = new }
+
+-- Utility functions
+addOnlineUser :: User -> IRCParser ()
+addOnlineUser usr = do
+  old <- getOnline
+  putOnline $ (usr:old)
+
+removeOnlineUser :: User -> IRCParser ()
+removeOnlineUser usr = do
+  old <- getOnline
+  putOnline $ filter (== usr) old

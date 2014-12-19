@@ -2,6 +2,7 @@
 module Main where
 
 import Parsers
+import Tell
 import Network
 import System.IO
 import Text.Printf
@@ -28,7 +29,7 @@ main = do
     write h (T.pack "NICK") nick
     write h (T.pack "USER") usermsg
     write h (T.pack "JOIN") chan
-    let emptyState = (IRCState M.empty)
+    let emptyState = (IRCState M.empty [])
     listen h emptyState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
@@ -41,8 +42,12 @@ listen h st = do
     t <- TIO.hGetLine h
     let s = T.init t
     nst <- eval h s st
+    let (IRCState usrMessages usrs) = nst
+        (acts, newUsrMessages) = tellAll usrs usrMessages
+        nst' = IRCState newUsrMessages usrs
+    mapM_ (runAct h) acts
     TIO.putStrLn s
-    listen h nst
+    listen h nst'
 
 eval :: Handle -> T.Text -> IRCState -> IO IRCState
 eval h s ircState = do
