@@ -3,24 +3,26 @@ module Main where
 
 import Parsers
 import Tell
+import Save
 import Network
 import System.IO
-import Text.Printf
-import Data.List
 import Data.Time
+import Control.Monad
 import qualified Data.Map as M
-import System.Exit
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
-import Text.Parsec
-import Control.Monad.Reader
 
+server :: String
 server  = "irc.freenode.org"
+port :: Int
 port    = 6667
+chan,nick,user,usermsg :: T.Text
 chan    = T.pack "#eras"
 nick    = T.pack "btjchm"
 user    = T.pack " 0 * :jchmrt's bot"
 usermsg = T.concat [nick,user]
+
+userMessagesFile = "userMessages.sav"
 
 main :: IO ()
 main = do
@@ -29,7 +31,8 @@ main = do
     write h (T.pack "NICK") nick
     write h (T.pack "USER") usermsg
     write h (T.pack "JOIN") chan
-    let emptyState = (IRCState M.empty [])
+    usrMessages <- readUserMessagesFromFile userMessagesFile
+    let emptyState = IRCState usrMessages []
     listen h emptyState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
@@ -45,15 +48,17 @@ listen h st = do
     let (IRCState usrMessages usrs) = nst
         (acts, newUsrMessages) = tellAll usrs usrMessages
         nst' = IRCState newUsrMessages usrs
+    when (newUsrMessages /= usrMessages)
+      $ writeUserMessagesToFile userMessagesFile newUsrMessages
     mapM_ (runAct h) acts
     TIO.putStrLn s
     listen h nst'
 
 eval :: Handle -> T.Text -> IRCState -> IO IRCState
-eval h s ircState = do
+eval h s ircSt = do
   time <- getCurrentTime
-  let parserState = IRCParserState ircState (MessageContext "" "" "" time) 
-      (act, (IRCParserState newIrcState _)) = parseMessage s parserState
+  let parserState = IRCParserState ircSt (MessageContext "" "" "" time) 
+      (act, IRCParserState newIrcState _) = parseMessage s parserState
   runAct h act
   return newIrcState
 

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Parsers ( User(..)
+module Parsers ( User
                , UserMessage(..)
                , IRCState(..)
                , MessageContext(..)
@@ -20,7 +20,7 @@ import qualified Data.Text as T
 type User = T.Text
 
 -- |A data type representing a message
-newtype UserMessage = UserMessage (T.Text, MessageContext) deriving Show
+newtype UserMessage = UserMessage (T.Text, MessageContext) deriving (Show,Read,Eq)
 
 -- Should probably be in another module
 -- |A data type representing the IRC State
@@ -34,7 +34,7 @@ data MessageContext =
                    , msgContextSenderFull :: T.Text
                    , msgContextChannel    :: T.Text
                    , msgContextTime       :: UTCTime
-                   } deriving Show
+                   } deriving (Show,Read,Eq)
 
 -- |A data type representing the state of the IRC Parser as wel as the
 -- whole IRC State.
