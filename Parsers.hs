@@ -266,4 +266,4 @@ addOnlineUser usr = do
 removeOnlineUser :: User -> IRCParser ()
 removeOnlineUser usr = do
   old <- getOnline
-  putOnline $ filter (== usr) old
+  putOnline $ filter (/= usr) old
