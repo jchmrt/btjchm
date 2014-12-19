@@ -1,5 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Parsers where
+module Parsers ( User
+               , UserMessage(..)
+               , IRCState(..)
+               , MessageContext(..)
+               , IRCParserState(..)
+               , IRCAction(..)
+               , parseMessage
+               ) where
 
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
@@ -32,65 +39,6 @@ data IRCParserState =
     IRCParserState { ircState :: IRCState
                    , messageContext :: MessageContext
                    } deriving Show
-
--- Getters, because I cant get ghci to work on arm -> so no TemplateHaskell,
--- which means I can't use lenses, and this is my workaround.
-getIRCState :: IRCParser IRCState
-getIRCState = gets ircState
-
-getMessageContext :: IRCParser MessageContext
-getMessageContext = gets messageContext
-
-getUserMessages :: IRCParser (M.Map User [UserMessage])
-getUserMessages = gets $ userMessages . ircState
-
-getMsgContextSenderNick :: IRCParser T.Text
-getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
-
-getMsgContextSenderFull :: IRCParser T.Text
-getMsgContextSenderFull = gets $ msgContextSenderFull . messageContext
-
-getMsgContextChannel :: IRCParser T.Text
-getMsgContextChannel = gets $ msgContextChannel . messageContext
-
-getMsgContextTime :: IRCParser UTCTime
-getMsgContextTime = gets $ msgContextTime . messageContext
-
--- Putters, same reason
-putIRCState :: IRCState -> IRCParser ()
-putIRCState new = do 
-    old <- get
-    put $ old { ircState = new }
-
-putMessageContext :: MessageContext -> IRCParser ()
-putMessageContext new = do 
-    old <- get
-    put $ old { messageContext = new }
-
-putUserMessages :: M.Map User [UserMessage] -> IRCParser ()
-putUserMessages new = do 
-    old <- getIRCState
-    putIRCState $ old { userMessages = new }
-
-putMsgContextSenderNick :: T.Text -> IRCParser ()
-putMsgContextSenderNick new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextSenderNick = new }
-
-putMsgContextSenderFull :: T.Text -> IRCParser ()
-putMsgContextSenderFull new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextSenderFull = new }
-
-putMsgContextChannel :: T.Text -> IRCParser ()
-putMsgContextChannel new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextChannel = new }
-
-putMsgContextTime :: UTCTime -> IRCParser ()
-putMsgContextTime new = do
-    old <- getMessageContext
-    putMessageContext $ old { msgContextTime = new }
 
 -- |The IRCParser Monad, used for parsing messages. Incorporates the
 -- State Monad and the Parsec Monad.
@@ -188,3 +136,62 @@ parseWord :: Monad m => ParsecT T.Text u m T.Text
 parseWord = parseTill ' '
 parseTill :: Monad m => Char -> ParsecT T.Text u m T.Text
 parseTill c = fmap T.pack $ manyTill anyChar (try (char c))
+
+-- Getters, because I cant get ghci to work on arm -> so no TemplateHaskell,
+-- which means I can't use lenses, and this is my workaround.
+getIRCState :: IRCParser IRCState
+getIRCState = gets ircState
+
+getMessageContext :: IRCParser MessageContext
+getMessageContext = gets messageContext
+
+getUserMessages :: IRCParser (M.Map User [UserMessage])
+getUserMessages = gets $ userMessages . ircState
+
+getMsgContextSenderNick :: IRCParser T.Text
+getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
+
+getMsgContextSenderFull :: IRCParser T.Text
+getMsgContextSenderFull = gets $ msgContextSenderFull . messageContext
+
+getMsgContextChannel :: IRCParser T.Text
+getMsgContextChannel = gets $ msgContextChannel . messageContext
+
+getMsgContextTime :: IRCParser UTCTime
+getMsgContextTime = gets $ msgContextTime . messageContext
+
+-- Putters, same reason
+putIRCState :: IRCState -> IRCParser ()
+putIRCState new = do 
+    old <- get
+    put $ old { ircState = new }
+
+putMessageContext :: MessageContext -> IRCParser ()
+putMessageContext new = do 
+    old <- get
+    put $ old { messageContext = new }
+
+putUserMessages :: M.Map User [UserMessage] -> IRCParser ()
+putUserMessages new = do 
+    old <- getIRCState
+    putIRCState $ old { userMessages = new }
+
+putMsgContextSenderNick :: T.Text -> IRCParser ()
+putMsgContextSenderNick new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextSenderNick = new }
+
+putMsgContextSenderFull :: T.Text -> IRCParser ()
+putMsgContextSenderFull new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextSenderFull = new }
+
+putMsgContextChannel :: T.Text -> IRCParser ()
+putMsgContextChannel new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextChannel = new }
+
+putMsgContextTime :: UTCTime -> IRCParser ()
+putMsgContextTime new = do
+    old <- getMessageContext
+    putMessageContext $ old { msgContextTime = new }
