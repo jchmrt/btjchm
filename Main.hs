@@ -46,9 +46,10 @@ listen h st = do
     let s = T.init t
     nst <- eval h s st
     let (IRCState usrMessages usrs) = nst
+        (IRCState oldUsrMessages _) = st
         (acts, newUsrMessages) = tellAll usrs usrMessages
         nst' = IRCState newUsrMessages usrs
-    when (newUsrMessages /= usrMessages)
+    when (newUsrMessages /= oldUsrMessages)
       $ writeUserMessagesToFile userMessagesFile newUsrMessages
     mapM_ (runAct h) acts
     TIO.putStrLn s
