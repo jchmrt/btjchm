@@ -8,6 +8,7 @@ module Parsers ( User
                , parseMessage
                ) where
 
+import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
 import Data.Time
@@ -108,11 +109,11 @@ parsePrivateMessage = do
   case command of
     "!id"   -> parseCommandId
     "!tell" -> parseCommandTell
-    _       -> return $ NoAction
+    _       -> return NoAction
 
 parseCommandId :: IRCParser IRCAction
 parseCommandId = do 
-  text <- fmap T.pack $ many anyChar
+  text <- T.pack <$> many anyChar
   nick <- getMsgContextSenderNick
   chan <- getMsgContextChannel
   t    <- getMsgContextTime
@@ -135,7 +136,7 @@ parseCommandTell = do
 parseWord :: Monad m => ParsecT T.Text u m T.Text
 parseWord = parseTill ' '
 parseTill :: Monad m => Char -> ParsecT T.Text u m T.Text
-parseTill c = fmap T.pack $ manyTill anyChar (try (char c))
+parseTill c = T.pack <$> manyTill anyChar (try (char c))
 
 -- Getters, because I cant get ghci to work on arm -> so no TemplateHaskell,
 -- which means I can't use lenses, and this is my workaround.
