@@ -32,7 +32,7 @@ main = do
     write h (T.pack "USER") usermsg
     write h (T.pack "JOIN") chan
     usrMessages <- readUserMessagesFromFile userMessagesFile
-    let emptyState = IRCState usrMessages []
+    let emptyState = IRCState usrMessages [] undefined
     listen h emptyState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
@@ -45,10 +45,10 @@ listen h st = do
     t <- TIO.hGetLine h
     let s = T.init t
     nst <- eval h s st
-    let (IRCState usrMessages usrs) = nst
-        (IRCState oldUsrMessages _) = st
+    let (IRCState usrMessages usrs _) = nst
+        (IRCState oldUsrMessages _ _) = st
         (acts, newUsrMessages) = tellAll usrs usrMessages
-        nst' = IRCState newUsrMessages usrs
+        nst' = IRCState newUsrMessages usrs undefined
     when (newUsrMessages /= oldUsrMessages)
       $ writeUserMessagesToFile userMessagesFile newUsrMessages
     mapM_ (runAct h) acts
@@ -61,9 +61,12 @@ eval h s ircSt = do
   let parserState = IRCParserState ircSt (MessageContext "" "" "" time) 
       (act, IRCParserState newIrcState _) = parseMessage s parserState
   case act of
-    Pong -> pong h s
-    _    -> runAct h act
+    [Pong] -> pong h s
+    _    -> runActs h act
   return newIrcState
+
+runActs :: Handle -> [IRCAction] -> IO ()
+runActs h acts = mapM_ (runAct h) acts
 
 runAct :: Handle -> IRCAction -> IO ()
 runAct h (PrivMsg t) = privmsg h t

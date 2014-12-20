@@ -12,6 +12,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
 import Data.Time
+import Data.Time.LocalTime
 import Text.Parsec
 import qualified Data.Map as M
 import qualified Data.Text as T
@@ -27,6 +28,7 @@ newtype UserMessage = UserMessage (T.Text, MessageContext) deriving (Show,Read,E
 data IRCState =
     IRCState { userMessages :: M.Map User [UserMessage] 
              , online       :: [User]
+             , timedActions :: [(UTCTime, [IRCAction])]
              } deriving Show
 
 data MessageContext =
@@ -92,24 +94,24 @@ parseMessageType = do
           "PING"    -> return PingMessage
           _         -> return OtherMessage
 
-parseMessage :: T.Text -> IRCParserState -> (IRCAction, IRCParserState)
+parseMessage :: T.Text -> IRCParserState -> ([IRCAction], IRCParserState)
 parseMessage str oldState =
   case runParser parseMessageType () "" str of
-    Left _  -> (NoAction, oldState)
+    Left _  -> ([NoAction], oldState)
     Right t ->
       let parser = case t of
             PrivateMessage -> parsePrivateMessage
-            NicksMessage   -> parseNicksMessage >> return NoAction
-            NickMessage    -> parseNickMessage >> return NoAction
-            PartMessage    -> parsePartMessage >> return NoAction
-            JoinMessage    -> parseJoinMessage >> return NoAction
-            PingMessage    -> return Pong
-            OtherMessage   -> return NoAction
+            NicksMessage   -> parseNicksMessage >> return [NoAction]
+            NickMessage    -> parseNickMessage >> return [NoAction]
+            PartMessage    -> parsePartMessage >> return [NoAction]
+            JoinMessage    -> parseJoinMessage >> return [NoAction]
+            PingMessage    -> return [Pong]
+            OtherMessage   -> return [NoAction]
       in case runIRCParser parser "" str oldState of
-            Left _            -> (NoAction, oldState)
+            Left _            -> ([NoAction], oldState)
             Right actAndState -> actAndState
 
-parsePrivateMessage :: IRCParser IRCAction
+parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
   char ':'
   nick <- parseTill '!'
@@ -125,19 +127,19 @@ parsePrivateMessage = do
     "!id"        -> parseCommandId
     "!tell"      -> parseCommandTell
     "!waitforit" -> parseCommandWaitForIt
-    _            -> return NoAction
+    _            -> return [NoAction]
 
-parseCommandId :: IRCParser IRCAction
+parseCommandId :: IRCParser [IRCAction]
 parseCommandId = do 
   text <- T.pack <$> many anyChar
   nick <- getMsgContextSenderNick
   chan <- getMsgContextChannel
   t    <- getMsgContextTime
   let time = T.pack $ show t
-  return $ PrivMsg $ T.concat [nick, " said \"", text
-                              ,"\" in ", chan, " at ", time]
+  return $ [PrivMsg $ T.concat [nick, " said \"", text
+                              ,"\" in ", chan, " at ", time]]
 
-parseCommandTell :: IRCParser IRCAction
+parseCommandTell :: IRCParser [IRCAction]
 parseCommandTell = do
   recipient <- parseWord
   msg <- fmap T.pack $ many1 anyChar
@@ -147,7 +149,21 @@ parseCommandTell = do
 
   userMsgs <- getUserMessages
   putUserMessages (M.insertWith (++) recipient [userMsg] userMsgs)
-  return $ PrivMsg "I will tell it them, as soon as i see them"
+  return $ [PrivMsg "I will tell it them, as soon as i see them"]
+
+parseCommandWaitForIt :: IRCParser [IRCAction]
+parseCommandWaitForIt = do
+  timeToWait <- parseWord
+  currentTime <- getMsgContextTime
+  let secs = read $ T.unpack timeToWait :: Integer
+      currentLocalTime = utcToLocalTime utc currentTime
+      currentLocalTimeOfDay = localTimeOfDay currentLocalTime
+      currentLocalSecond = todSec
+      localActionTime =
+        currentLocalTime { localTimeOfDay =
+          currentLocalTimeOfDay { todSec = todSec currentLocalTimeOfDay + 10 }}
+  return []
+  
 
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
@@ -206,6 +222,9 @@ getUserMessages = gets $ userMessages . ircState
 getOnline :: IRCParser [User]
 getOnline = gets $ online . ircState
 
+getTimedActions :: IRCParser [(UTCTime, [IRCAction])]
+getTimedActions = gets $ timedActions . ircState
+
 getMsgContextSenderNick :: IRCParser T.Text
 getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
 
@@ -239,6 +258,11 @@ putOnline new = do
   old <- getIRCState
   putIRCState $ old { online = new }
 
+putTimedActions :: [(UTCTime, [IRCAction])] -> IRCParser ()
+putTimedActions new = do
+  old <- getIRCState
+  putIRCState $ old { timedActions = new }
+
 putMsgContextSenderNick :: T.Text -> IRCParser ()
 putMsgContextSenderNick new = do
   old <- getMessageContext
@@ -263,9 +287,14 @@ putMsgContextTime new = do
 addOnlineUser :: User -> IRCParser ()
 addOnlineUser usr = do
   old <- getOnline
-  putOnline $ (usr:old)
+  putOnline (usr:old)
 
 removeOnlineUser :: User -> IRCParser ()
 removeOnlineUser usr = do
   old <- getOnline
   putOnline $ filter (/= usr) old
+
+addTimedAction :: (UTCTime, [IRCAction]) -> IRCParser ()
+addTimedAction timedAct = do
+  old <- getTimedActions
+  putTimedActions (timedAct:old)
