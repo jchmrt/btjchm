@@ -122,9 +122,10 @@ parsePrivateMessage = do
   char ':'
   command <- parseWord
   case command of
-    "!id"   -> parseCommandId
-    "!tell" -> parseCommandTell
-    _       -> return NoAction
+    "!id"        -> parseCommandId
+    "!tell"      -> parseCommandTell
+    "!waitforit" -> parseCommandWaitForIt
+    _            -> return NoAction
 
 parseCommandId :: IRCParser IRCAction
 parseCommandId = do 
