@@ -139,7 +139,7 @@ parseCommandId = do
 parseCommandTell :: IRCParser IRCAction
 parseCommandTell = do
   recipient <- parseWord
-  msg <- fmap T.pack $ many anyChar
+  msg <- fmap T.pack $ many1 anyChar
 
   cntxt <- getMessageContext
   let userMsg = UserMessage (msg, cntxt)
