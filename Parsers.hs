@@ -159,10 +159,11 @@ parseCommandWaitForIt = do
       currentLocalTime = utcToLocalTime utc currentTime
       currentLocalTimeOfDay = localTimeOfDay currentLocalTime
       currentLocalSecond = todSec
-      localActionTime =
-        currentLocalTime { localTimeOfDay =
+      localActionTime = currentLocalTime { localTimeOfDay =
           currentLocalTimeOfDay { todSec = todSec currentLocalTimeOfDay + 10 }}
-  return []
+      actionTime = localTimeToUTC utc localActionTime
+  addTimedAction (actionTime, [PrivMsg "DARY", PrivMsg "LEGENDARY!!!"])
+  return [PrivMsg "LEGEN", PrivMsg "wait for it..."]
   
 
 parseNicksMessage :: IRCParser ()

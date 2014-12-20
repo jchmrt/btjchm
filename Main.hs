@@ -32,7 +32,7 @@ main = do
     write h (T.pack "USER") usermsg
     write h (T.pack "JOIN") chan
     usrMessages <- readUserMessagesFromFile userMessagesFile
-    let emptyState = IRCState usrMessages [] undefined
+    let emptyState = IRCState usrMessages [] []
     listen h emptyState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
@@ -45,10 +45,10 @@ listen h st = do
     t <- TIO.hGetLine h
     let s = T.init t
     nst <- eval h s st
-    let (IRCState usrMessages usrs _) = nst
+    let (IRCState usrMessages usrs timedActs) = nst
         (IRCState oldUsrMessages _ _) = st
         (acts, newUsrMessages) = tellAll usrs usrMessages
-        nst' = IRCState newUsrMessages usrs undefined
+        nst' = IRCState newUsrMessages usrs timedActs
     when (newUsrMessages /= oldUsrMessages)
       $ writeUserMessagesToFile userMessagesFile newUsrMessages
     mapM_ (runAct h) acts
