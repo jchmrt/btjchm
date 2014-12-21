@@ -173,14 +173,13 @@ addSecondsToDate extraSeconds oldTime =
       oldHours   = todHour oldLocalTimeOfDay
       oldDays    = localDay oldLocalTime
 
-      extraSeconds' = round extraSeconds :: Int
-      extraMinutes  = extraSeconds' `div` 60
-      extraHours    = extraMinutes  `div` 60
-      extraDays     = extraHours    `div` 24
+      extraMinutes  = round (extraSeconds + oldSeconds) `div` 60
+      extraHours    = (extraMinutes + oldMinutes)       `div` 60
+      extraDays     = (extraHours + oldHours)           `div` 24
 
       newSeconds = (round (oldSeconds + extraSeconds) :: Int ) `mod` 60
-      newMinutes = (oldMinutes + extraMinutes) `mod` 60
-      newHours   = (oldHours   + extraHours)   `mod` 24
+      newMinutes = (oldMinutes + extraMinutes)                 `mod` 60
+      newHours   = (oldHours   + extraHours)                   `mod` 24
       newDays    = addDays (fromIntegral extraDays) oldDays
 
       newLocalTime = oldLocalTime
