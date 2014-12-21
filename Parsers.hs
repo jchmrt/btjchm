@@ -13,6 +13,7 @@ import Control.Monad.State.Lazy
 import Control.Monad.Identity
 import Data.Time
 import Data.Time.LocalTime
+import Data.Time.Calendar
 import Text.Parsec
 import qualified Data.Set as S
 import qualified Data.Map as M
@@ -156,15 +157,39 @@ parseCommandWaitForIt :: IRCParser [IRCAction]
 parseCommandWaitForIt = do
   timeToWait <- parseWord
   currentTime <- getMsgContextTime
-  let secs = read $ T.unpack timeToWait :: Integer
-      currentLocalTime = utcToLocalTime utc currentTime
-      currentLocalTimeOfDay = localTimeOfDay currentLocalTime
-      currentLocalSecond = todSec
-      localActionTime = currentLocalTime { localTimeOfDay =
-          currentLocalTimeOfDay { todSec = todSec currentLocalTimeOfDay + 10 }}
-      actionTime = localTimeToUTC utc localActionTime
+
+  let extraSeconds = read $ T.unpack timeToWait :: Integer
+      actionTime = addSecondsToDate (fromIntegral extraSeconds) currentTime
+
   addTimedAction (actionTime, [PrivMsg "DARY", PrivMsg "LEGENDARY!!!"])
   return [PrivMsg "LEGEN", PrivMsg "wait for it..."]
+
+addSecondsToDate extraSeconds oldTime = 
+  let oldLocalTime = utcToLocalTime utc oldTime
+      oldLocalTimeOfDay = localTimeOfDay oldLocalTime
+
+      oldSeconds = todSec oldLocalTimeOfDay
+      oldMinutes = todMin oldLocalTimeOfDay
+      oldHours   = todHour oldLocalTimeOfDay
+      oldDays    = localDay oldLocalTime
+
+      extraSeconds' = round extraSeconds :: Int
+      extraMinutes  = extraSeconds' `div` 60
+      extraHours    = extraMinutes  `div` 60
+      extraDays     = extraHours    `div` 24
+
+      newSeconds = (round (oldSeconds + extraSeconds) :: Int ) `mod` 60
+      newMinutes = (oldMinutes + extraMinutes) `mod` 60
+      newHours   = (oldHours   + extraHours)   `mod` 24
+      newDays    = addDays (fromIntegral extraDays) oldDays
+
+      newLocalTime = oldLocalTime
+       { localTimeOfDay = TimeOfDay { todSec  = fromIntegral newSeconds
+                                    , todMin  = newMinutes
+                                    , todHour = newHours }
+       , localDay = newDays
+       }
+  in localTimeToUTC utc newLocalTime
   
 
 parseNicksMessage :: IRCParser ()
