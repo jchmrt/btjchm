@@ -10,6 +10,7 @@ import Data.Time
 import Control.Monad
 import qualified Data.Map as M
 import qualified Data.Text as T
+import qualified Data.Set as S
 import qualified Data.Text.IO as TIO
 
 server :: String
@@ -32,7 +33,7 @@ main = do
     write h (T.pack "USER") usermsg
     write h (T.pack "JOIN") chan
     usrMessages <- readUserMessagesFromFile userMessagesFile
-    let emptyState = IRCState usrMessages [] []
+    let emptyState = IRCState usrMessages S.empty []
     listen h emptyState
 
 write :: Handle -> T.Text -> T.Text -> IO ()

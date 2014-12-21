@@ -7,10 +7,11 @@ import Parsers
 import Data.List
 import qualified Data.Map as M
 import qualified Data.Text as T
+import qualified Data.Set as S
 
-tellAll :: [User] -> M.Map User [UserMessage] 
+tellAll :: S.Set User -> M.Map User [UserMessage] 
         -> ([IRCAction], M.Map User [UserMessage])
-tellAll onlineUsers messages = foldl' f ([],messages) onlineUsers
+tellAll onlineUsers messages = S.foldl' f ([],messages) onlineUsers
   where f (acts, msgs) user = 
             let (newActs, newMessages) = tell user msgs
             in (newActs++acts, newMessages)

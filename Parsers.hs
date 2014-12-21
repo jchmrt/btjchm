@@ -14,6 +14,7 @@ import Control.Monad.Identity
 import Data.Time
 import Data.Time.LocalTime
 import Text.Parsec
+import qualified Data.Set as S
 import qualified Data.Map as M
 import qualified Data.Text as T
 
@@ -27,7 +28,7 @@ newtype UserMessage = UserMessage (T.Text, MessageContext) deriving (Show,Read,E
 -- |A data type representing the IRC State
 data IRCState =
     IRCState { userMessages :: M.Map User [UserMessage] 
-             , online       :: [User]
+             , online       :: S.Set User
              , timedActions :: [(UTCTime, [IRCAction])]
              } deriving Show
 
@@ -175,7 +176,7 @@ parseNicksMessage = do
   parseWord
   char ':'
   nicks <- many parseNick
-  mapM_ addOnlineUser nicks
+  putOnline $ S.fromList nicks
 
 parseNick :: IRCParser User
 parseNick = do
@@ -184,6 +185,7 @@ parseNick = do
   
 parseNickMessage :: IRCParser ()
 parseNickMessage = do
+  char ':'
   oldNick <- parseTill '!'
   parseWord
   parseWord
@@ -220,7 +222,7 @@ getMessageContext = gets messageContext
 getUserMessages :: IRCParser (M.Map User [UserMessage])
 getUserMessages = gets $ userMessages . ircState
 
-getOnline :: IRCParser [User]
+getOnline :: IRCParser (S.Set User)
 getOnline = gets $ online . ircState
 
 getTimedActions :: IRCParser [(UTCTime, [IRCAction])]
@@ -254,7 +256,7 @@ putUserMessages new = do
   old <- getIRCState
   putIRCState $ old { userMessages = new }
 
-putOnline :: [User] -> IRCParser ()
+putOnline :: S.Set User -> IRCParser ()
 putOnline new = do
   old <- getIRCState
   putIRCState $ old { online = new }
@@ -288,12 +290,12 @@ putMsgContextTime new = do
 addOnlineUser :: User -> IRCParser ()
 addOnlineUser usr = do
   old <- getOnline
-  putOnline (usr:old)
+  putOnline $ S.insert usr old
 
 removeOnlineUser :: User -> IRCParser ()
 removeOnlineUser usr = do
   old <- getOnline
-  putOnline $ filter (/= usr) old
+  putOnline $ S.delete usr old
 
 addTimedAction :: (UTCTime, [IRCAction]) -> IRCParser ()
 addTimedAction timedAct = do
