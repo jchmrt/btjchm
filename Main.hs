@@ -4,6 +4,7 @@ module Main where
 import Parsers
 import Tell
 import Save
+import TimedActions
 import Network
 import System.IO
 import Data.Time
@@ -46,13 +47,23 @@ listen h st = do
     t <- TIO.hGetLine h
     let s = T.init t
     nst <- eval h s st
+
+    time <- getCurrentTime
+
     let (IRCState usrMessages usrs timedActs) = nst
         (IRCState oldUsrMessages _ _) = st
-        (acts, newUsrMessages) = tellAll usrs usrMessages
-        nst' = IRCState newUsrMessages usrs timedActs
+        (tellActs, newUsrMessages) = tellAll usrs usrMessages
+
+        (timedActsToRun,newTimedActs) = updateTimedActions time timedActs
+        nst' = IRCState newUsrMessages usrs newTimedActs
+
+    runActs h tellActs
+    runActs h timedActsToRun
+
     when (newUsrMessages /= oldUsrMessages)
       $ writeUserMessagesToFile userMessagesFile newUsrMessages
-    mapM_ (runAct h) acts
+
+
     TIO.putStrLn s
     listen h nst'
 
