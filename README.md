@@ -9,10 +9,9 @@ $ cabal configure
 $ cabal build
 ```
 
-Most of the important data types are currently in Parsers.hs, so if
-you want to understand the code you should probably start there. This
-should probably be changed, since now every other module has to import 
-Parsers.
+Most of the important data types are in Core.hs, so if
+you want to understand the code you should probably start there. 
+Currently every other module imports Core.hs.
 
 Main.hs is mostly code to just tie the ends together. Save.hs contains
 some helper functions to save the messages the bot should remember.
