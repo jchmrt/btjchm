@@ -159,37 +159,10 @@ parseCommandWaitForIt = do
   currentTime <- getMsgContextTime
 
   let extraSeconds = read $ T.unpack timeToWait :: Integer
-      actionTime = addSecondsToDate (fromIntegral extraSeconds) currentTime
+      actionTime = addUTCTime (fromIntegral extraSeconds) currentTime
 
   addTimedAction (actionTime, [PrivMsg "DARY", PrivMsg "LEGENDARY!!!"])
   return [PrivMsg "LEGEN", PrivMsg "wait for it..."]
-
-addSecondsToDate extraSeconds oldTime = 
-  let oldLocalTime = utcToLocalTime utc oldTime
-      oldLocalTimeOfDay = localTimeOfDay oldLocalTime
-
-      oldSeconds = todSec oldLocalTimeOfDay
-      oldMinutes = todMin oldLocalTimeOfDay
-      oldHours   = todHour oldLocalTimeOfDay
-      oldDays    = localDay oldLocalTime
-
-      extraMinutes  = round (extraSeconds + oldSeconds) `div` 60
-      extraHours    = (extraMinutes + oldMinutes)       `div` 60
-      extraDays     = (extraHours + oldHours)           `div` 24
-
-      newSeconds = (round (oldSeconds + extraSeconds) :: Int ) `mod` 60
-      newMinutes = (oldMinutes + extraMinutes)                 `mod` 60
-      newHours   = (oldHours   + extraHours)                   `mod` 24
-      newDays    = addDays (fromIntegral extraDays) oldDays
-
-      newLocalTime = oldLocalTime
-       { localTimeOfDay = TimeOfDay { todSec  = fromIntegral newSeconds
-                                    , todMin  = newMinutes
-                                    , todHour = newHours }
-       , localDay = newDays
-       }
-  in localTimeToUTC utc newLocalTime
-  
 
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
