@@ -3,7 +3,7 @@ module Tell (tellAll) where
 
 -- It's not ideal that we have to import Parsers here, but it is the
 -- best we can do right now. FIX ME
-import Parsers
+import Core
 import Data.List
 import qualified Data.Map as M
 import qualified Data.Text as T

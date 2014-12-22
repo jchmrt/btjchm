@@ -8,6 +8,7 @@ module Parsers ( User
                , parseMessage
                ) where
 
+import Core
 import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
@@ -20,27 +21,6 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 import qualified Data.Text as T
 
--- |A simple type synomym
-type User = T.Text
-
--- |A data type representing a message
-newtype UserMessage = UserMessage (T.Text, MessageContext) deriving (Show,Read,Eq)
-
--- Should probably be in another module
--- |A data type representing the IRC State
-data IRCState =
-    IRCState { userMessages :: M.Map User [UserMessage] 
-             , online       :: S.Set User
-             , timedActions :: [(UTCTime, [IRCAction])]
-             } deriving Show
-
-data MessageContext =
-    MessageContext { msgContextSenderNick :: T.Text
-                   , msgContextSenderFull :: T.Text
-                   , msgContextChannel    :: T.Text
-                   , msgContextTime       :: UTCTime
-                   } deriving (Show,Read,Eq)
-
 -- |A data type representing the state of the IRC Parser as wel as the
 -- whole IRC State.
 data IRCParserState =
@@ -51,25 +31,17 @@ data IRCParserState =
 -- |The IRCParser Monad, used for parsing messages. Incorporates the
 -- State Monad and the Parsec Monad.
 type IRCParser a = ParsecT T.Text ()
-    (StateT IRCParserState Identity) a
+                   (Control.Monad.State.Lazy.State IRCParserState) a
 
 -- |Run a IRCParser
 runIRCParser :: IRCParser a -> SourceName -> T.Text
              -> IRCParserState -> Either ParseError (a,IRCParserState)
 runIRCParser p s t st =
-    case runIdentity $ runStateT (runParserT p () s t) st of
+    case runState (runParserT p () s t) st of
       (Left err, _) -> Left err
       (Right out, state) -> Right (out,state)
 
--- Should probably be in another module
--- |A data type representing an action the irc bot can take, intended
--- to be run by runAct.
-data IRCAction = PrivMsg { privMsgText :: T.Text }
-               | Pong
-               | Leave
-               | Quit
-               | NoAction
-    deriving Show
+-------------------------------------------------------------------------------- 
 
 -- | Represents an message
 data MessageType = PrivateMessage

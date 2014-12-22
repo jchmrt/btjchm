@@ -2,7 +2,7 @@ module Save ( writeUserMessagesToFile
             , readUserMessagesFromFile 
             ) where
 
-import Parsers
+import Core
 import qualified Data.Text as T
 import qualified Data.Map as M
 import Control.Applicative ((<$>))
