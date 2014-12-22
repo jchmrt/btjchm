@@ -12,6 +12,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
 import Data.Time
+import Data.Char
 import Data.Time.LocalTime
 import Data.Time.Calendar
 import Text.Parsec
@@ -129,6 +130,7 @@ parsePrivateMessage = do
     "!id"        -> parseCommandId
     "!tell"      -> parseCommandTell
     "!waitforit" -> parseCommandWaitForIt
+    "!say"       -> parseCommandSay
     _            -> return [NoAction]
 
 parseCommandId :: IRCParser [IRCAction]
@@ -158,11 +160,18 @@ parseCommandWaitForIt = do
   timeToWait <- parseWord
   currentTime <- getMsgContextTime
 
-  let extraSeconds = read $ T.unpack timeToWait :: Integer
-      actionTime = addUTCTime (fromIntegral extraSeconds) currentTime
+  extraSeconds <- if all isDigit $ T.unpack timeToWait
+                  then return (read $ T.unpack timeToWait :: Integer)
+                  else fail "Couldn't parse Integer"
+  let actionTime = addUTCTime (fromIntegral extraSeconds) currentTime
 
   addTimedAction (actionTime, [PrivMsg "DARY", PrivMsg "LEGENDARY!!!"])
   return [PrivMsg "LEGEN", PrivMsg "wait for it..."]
+         
+parseCommandSay :: IRCParser [IRCAction]
+parseCommandSay = do
+  txt <- T.pack <$> many anyChar
+  return [PrivMsg txt]
 
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
