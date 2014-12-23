@@ -103,6 +103,7 @@ parsePrivateMessage = do
     "!tell"      -> parseCommandTell
     "!waitforit" -> parseCommandWaitForIt
     "!say"       -> parseCommandSay
+    "!rejoin"    -> return [ReJoin]
     _            -> return [NoAction]
 
 parseCommandId :: IRCParser [IRCAction]

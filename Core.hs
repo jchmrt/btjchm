@@ -35,6 +35,7 @@ data MessageContext =
 -- to be run by runAct.
 data IRCAction = PrivMsg { privMsgText :: T.Text }
                | Pong
+               | ReJoin
                | Leave
                | Quit
                | NoAction

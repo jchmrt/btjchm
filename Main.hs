@@ -83,10 +83,11 @@ eval h s ircSt = do
   return newIrcState
 
 runActs :: Handle -> [IRCAction] -> IO ()
-runActs h acts = mapM_ (runAct h) acts
+runActs h = mapM_ (runAct h) 
 
 runAct :: Handle -> IRCAction -> IO ()
 runAct h (PrivMsg t) = privmsg h t
+runAct h ReJoin      = write h (T.pack "JOIN") chan
 runAct _ _           = return ()
 
 privmsg :: Handle -> T.Text -> IO ()
