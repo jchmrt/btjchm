@@ -109,7 +109,7 @@ parsePrivateMessage = do
     "!afk"       -> parseCommandAfk
     "!remind"    -> parseCommandRemind
     "!waitforit" -> parseCommandWaitForIt
-    "!whatsnew"  -> newsMessage
+    "!whatsnew"  -> return newsMessage
     "!say"       -> parseCommandSay
     "!rejoin"    -> return [ReJoin]
     _            -> return [NoAction]
