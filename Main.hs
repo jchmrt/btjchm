@@ -45,7 +45,7 @@ write h s t = do
 
 listen :: Handle -> IRCState -> IO ()
 listen h st = do
-  inputAvailable <- hWaitForInput h 100
+  inputAvailable <- hWaitForInput h 1000
   nst <- (if inputAvailable
           then (do
                    t <- TIO.hGetLine h
