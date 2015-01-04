@@ -9,7 +9,6 @@ module Parsers ( User
                ) where
 
 import Core
-import Encrypt
 import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
@@ -78,7 +77,7 @@ parseMessage str oldState =
     Right t ->
       let parser = case t of
             PrivateMessage -> parsePrivateMessage
-            NicksMessage   -> parseNicksMessage >> return [NoAction]
+            NicksMessage   -> parseNicksMessage >> return newsMessage
             NickMessage    -> parseNickMessage >> return [NoAction]
             PartMessage    -> parsePartMessage >> return [NoAction]
             JoinMessage    -> parseJoinMessage >> return [NoAction]
@@ -87,6 +86,11 @@ parseMessage str oldState =
       in case runIRCParser parser "" str oldState of
             Left _            -> ([NoAction], oldState)
             Right actAndState -> actAndState
+
+newsMessage :: [IRCAction]
+newsMessage = [PrivMsg "New in btjchm: !id was removed and !remind was added"
+              ,PrivMsg "Use !remind with: !remind <who> <number> <unit> <what>"
+              ,PrivMsg "A unit can be s (seconds), m (minutes), or h (hours)."]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
@@ -101,9 +105,9 @@ parsePrivateMessage = do
   char ':'
   command <- parseWord
   case command of
-    "!id"        -> parseCommandId
     "!tell"      -> parseCommandTell
     "!afk"       -> parseCommandAfk
+    "!remind"    -> parseCommandRemind
     "!waitforit" -> parseCommandWaitForIt
     "!say"       -> parseCommandSay
     "!rejoin"    -> return [ReJoin]
@@ -144,6 +148,29 @@ parseCommandAfk = do
                      _  -> addAfkUserWithMessage sender
                              $ Just $ UserMessage (msg,msgCntxt)
                     return [PrivMsg "You are now afk"])
+
+parseCommandRemind :: IRCParser [IRCAction]
+parseCommandRemind = do
+  currentTime <- getMsgContextTime
+  recipient <- parseWord
+  number <- manyTill digit (try $ char ' ')
+  unit <- oneOf "smh"
+  char ' '
+  recipient' <- case recipient of
+                  "me" -> getMsgContextSenderNick
+                  _    -> return recipient
+  let multiplier = case unit of
+        's' -> 1
+        'm' -> 60
+        'h' -> 3600
+      n = read number :: Int
+      seconds = n * multiplier
+      actionTime = addUTCTime (fromIntegral seconds) currentTime
+  msg <- T.pack <$> many1 anyChar
+  addTimedAction (actionTime, [PrivMsg $ T.concat [recipient'
+                                                  ,": ", msg]])
+  return [PrivMsg "Will do!"]
+        
 
 parseCommandWaitForIt :: IRCParser [IRCAction]
 parseCommandWaitForIt = do
