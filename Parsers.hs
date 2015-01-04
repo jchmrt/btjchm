@@ -87,10 +87,10 @@ parseMessage str oldState =
             Left _            -> ([NoAction], oldState)
             Right actAndState -> actAndState
 
-newsMessage :: [IRCAction]
-newsMessage = [PrivMsg "New in btjchm: !id was removed and !remind was added"
-              ,PrivMsg "Use !remind with: !remind <who> <number> <unit> <what>"
-              ,PrivMsg "A unit can be s (seconds), m (minutes), or h (hours)."]
+introMessage,newsMessage :: [IRCAction]
+introMessage = [PrivMsg "Hey everybody, to see what's new just use !whatsnew"]
+newsMessage = [PrivMsg "What's new in btjchm: \
+                        \you can now use this command to see what's new!"]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
@@ -109,6 +109,7 @@ parsePrivateMessage = do
     "!afk"       -> parseCommandAfk
     "!remind"    -> parseCommandRemind
     "!waitforit" -> parseCommandWaitForIt
+    "!whatsnew"  -> newsMessage
     "!say"       -> parseCommandSay
     "!rejoin"    -> return [ReJoin]
     _            -> return [NoAction]
