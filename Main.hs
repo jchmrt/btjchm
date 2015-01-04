@@ -35,7 +35,7 @@ main = do
   write h (T.pack "USER") usermsg
   write h (T.pack "JOIN") chan
   usrMessages <- readUserMessagesFromFile userMessagesFile
-  let emptyState = IRCState usrMessages S.empty []
+  let emptyState = IRCState usrMessages S.empty M.empty []
   listen h emptyState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
@@ -57,12 +57,12 @@ listen h st = do
           else return st)
   time <- getCurrentTime
 
-  let (IRCState usrMessages usrs timedActs) = nst
-      (IRCState oldUsrMessages _ _) = st
+  let (IRCState usrMessages usrs afk timedActs) = nst
+      (IRCState oldUsrMessages _ _ _) = st
       (tellActs, newUsrMessages) = tellAll usrs usrMessages
 
       (timedActsToRun,newTimedActs) = updateTimedActions time timedActs
-      nst' = IRCState newUsrMessages usrs newTimedActs
+      nst' = IRCState newUsrMessages usrs afk newTimedActs
 
   runActs h tellActs
   runActs h timedActsToRun

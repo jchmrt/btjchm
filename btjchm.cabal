@@ -16,7 +16,7 @@ version:             0.1.0.0
 synopsis:            My very own irc bot
 
 -- A longer description of the package.
--- description:         
+-- description:
 
 -- The license under which the package is released.
 license:             MIT
@@ -27,7 +27,7 @@ license-file:        LICENSE
 -- The package author(s).
 author:              Jochem Raat
 
--- An email address to which users can send suggestions, bug reports, and 
+-- An email address to which users can send suggestions, bug reports, and
 -- patches.
 maintainer:          jochemraat@gmail.com
 
@@ -42,10 +42,10 @@ cabal-version:       >=1.8
 executable btjchm
   -- .hs or .lhs file containing the Main module.
   main-is:           Main.hs
-  
+
   -- Modules included in this executable, other than Main.
-  -- other-modules:       
-  
+  -- other-modules:
+
   -- Other library packages from which modules are imported.
   build-depends:     base ==4.*, containers ==0.5.*, text, time ==1.4.*
                    , parsec ==3.1.*, mtl ==2.1.*, network
