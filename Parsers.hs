@@ -77,7 +77,7 @@ parseMessage str oldState =
     Right t ->
       let parser = case t of
             PrivateMessage -> parsePrivateMessage
-            NicksMessage   -> parseNicksMessage >> return newsMessage
+            NicksMessage   -> parseNicksMessage >> return introMessage
             NickMessage    -> parseNickMessage >> return [NoAction]
             PartMessage    -> parsePartMessage >> return [NoAction]
             JoinMessage    -> parseJoinMessage >> return [NoAction]
@@ -90,7 +90,7 @@ parseMessage str oldState =
 introMessage,newsMessage :: [IRCAction]
 introMessage = [PrivMsg "Hey everybody, to see what's new just use !whatsnew"]
 newsMessage = [PrivMsg "What's new in btjchm: \
-                        \you can now use this command to see what's new!"]
+                        \you can now use the to see what's new!"]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
