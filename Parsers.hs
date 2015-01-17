@@ -13,6 +13,7 @@ import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
 import Data.List (foldl')
+import Data.Maybe
 import Data.Time
 import Data.Char
 import Data.Time.LocalTime
@@ -139,15 +140,13 @@ parseCommandTell = do
 parseCommandAfk :: IRCParser [IRCAction]
 parseCommandAfk = do
   sender <- getMsgContextSenderNick
-  isAfk <- M.member sender <$> getAfkUsers
+  isAfk <- (isJust . M.findWithDefault Nothing sender) <$> getOnlineUsers
   if isAfk then (do removeAfkUser sender
                     return [PrivMsg "You are no longer afk"])
            else (do msgCntxt <- getMessageContext
                     msg <- T.pack <$> many anyChar
-                    case msg of
-                     "" -> addAfkUserWithMessage sender Nothing
-                     _  -> addAfkUserWithMessage sender
-                             $ Just $ UserMessage (msg,msgCntxt)
+                    addAfkUserWithMessage sender
+                             $ UserMessage (msg,msgCntxt)
                     return [PrivMsg "You are now afk"])
 
 parseCommandRemind :: IRCParser [IRCAction]
@@ -200,7 +199,7 @@ parseNicksMessage = do
   parseWord
   char ':'
   nicks <- many parseNick
-  putOnlineUsers $ S.fromList nicks
+  putOnlineUsers $ M.fromList $ zip nicks (repeat Nothing)
 
 parseNick :: IRCParser User
 parseNick = do
@@ -246,11 +245,8 @@ getMessageContext = gets messageContext
 getUserMessages :: IRCParser (M.Map User [UserMessage])
 getUserMessages = gets $ userMessages . ircState
 
-getOnlineUsers :: IRCParser (S.Set User)
+getOnlineUsers :: IRCParser (M.Map User (Maybe UserMessage))
 getOnlineUsers = gets $ onlineUsers . ircState
-
-getAfkUsers :: IRCParser (M.Map User (Maybe UserMessage))
-getAfkUsers = gets $ afkUsers . ircState
 
 getTimedActions :: IRCParser [(UTCTime, [IRCAction])]
 getTimedActions = gets $ timedActions . ircState
@@ -283,14 +279,10 @@ putUserMessages new = do
   old <- getIRCState
   putIRCState $ old { userMessages = new }
 
-putOnlineUsers :: S.Set User -> IRCParser ()
+putOnlineUsers :: M.Map User (Maybe UserMessage) -> IRCParser ()
 putOnlineUsers new = do
   old <- getIRCState
   putIRCState $ old { onlineUsers = new }
-
-putAfkUsers new = do
-  old <- getIRCState
-  putIRCState $ old { afkUsers = new }
 
 putTimedActions :: [(UTCTime, [IRCAction])] -> IRCParser ()
 putTimedActions new = do
@@ -321,22 +313,22 @@ putMsgContextTime new = do
 addOnlineUser :: User -> IRCParser ()
 addOnlineUser usr = do
   old <- getOnlineUsers
-  putOnlineUsers $ S.insert usr old
+  putOnlineUsers $ M.insert usr Nothing old
 
 removeOnlineUser :: User -> IRCParser ()
 removeOnlineUser usr = do
   old <- getOnlineUsers
-  putOnlineUsers $ S.delete usr old
+  putOnlineUsers $ M.delete usr old
 
-addAfkUserWithMessage :: User -> Maybe UserMessage -> IRCParser ()
+addAfkUserWithMessage :: User -> UserMessage -> IRCParser ()
 addAfkUserWithMessage usr msg = do
-  old <- getAfkUsers
-  putAfkUsers $ M.insert usr msg old
+  old <- getOnlineUsers
+  putOnlineUsers $ M.insert usr (Just msg) old
 
 removeAfkUser :: User -> IRCParser ()
 removeAfkUser usr = do
-  old <- getAfkUsers
-  putAfkUsers $ M.delete usr old
+  old <- getOnlineUsers
+  putOnlineUsers $ M.insert usr Nothing old
 
 addTimedAction :: (UTCTime, [IRCAction]) -> IRCParser ()
 addTimedAction timedAct = do

@@ -1,18 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Tell (tellAll) where
 
--- It's not ideal that we have to import Parsers here, but it is the
--- best we can do right now. FIX ME
 import Core
 import Data.List
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Set as S
 
-tellAll :: S.Set User -> M.Map User [UserMessage] 
+tellAll :: M.Map User (Maybe UserMessage) -> M.Map User [UserMessage] 
         -> ([IRCAction], M.Map User [UserMessage])
-tellAll onlineUsers messages = S.foldl' f ([],messages) onlineUsers
-  where f (acts, msgs) user = 
+tellAll onlineUsers messages = M.foldlWithKey f ([],messages) onlineUsers
+  where
+    f acc          _    (Just _) = acc
+    f (acts, msgs) user _        = 
             let (newActs, newMessages) = tell user msgs
             in (newActs++acts, newMessages)
                

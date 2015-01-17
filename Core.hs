@@ -20,8 +20,7 @@ newtype UserMessage = UserMessage (T.Text, MessageContext) deriving (Show,Read,E
 -- |A data type representing the IRC State
 data IRCState =
     IRCState { userMessages :: M.Map User [UserMessage] 
-             , onlineUsers  :: S.Set User
-             , afkUsers     :: M.Map User (Maybe UserMessage)
+             , onlineUsers  :: M.Map User (Maybe UserMessage)
              , timedActions :: [(UTCTime, [IRCAction])]
              } deriving Show
 
