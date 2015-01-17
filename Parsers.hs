@@ -90,7 +90,7 @@ parseMessage str oldState =
 introMessage,newsMessage :: [IRCAction]
 introMessage = [PrivMsg "Hey everybody, to see what's new just use !whatsnew"]
 newsMessage = [PrivMsg "What's new in btjchm: \
-                        \you can now use the to see what's new!"]
+                        \you can now use this command to see what's new!"]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
