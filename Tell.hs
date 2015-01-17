@@ -25,14 +25,15 @@ tell recipient usrMessages =
       Nothing   -> ([], usrMessages)
 
 tellMessages :: User -> [UserMessage] -> [IRCAction]
-tellMessages recipient usrMessages = concat
-    [ [PrivMsg $ T.concat [ "Hey ", recipient, " you have "
-                          , tShow $ length usrMessages
-                          , " messages:" ]]
-    , zipWith (curry makeMessage) [1..] usrMessages ]
+tellMessages recipient usrMessages = 
+    [PrivMsg $ T.concat [ "Hey ", recipient, " you have "
+                        , tShow $ length usrMessages
+                        , " messages:" ]]
+    ++
+    zipWith (curry makeMessage) [1..] usrMessages
   where 
-    makeMessage (n, UserMessage (txt 
-      ,(MessageContext nick full chan time))) =
+    makeMessage (n, UserMessage
+      (txt, MessageContext nick _ chan time)) =
         PrivMsg $ T.concat [ tShow n, ": ", nick, " said \""
                            , txt, "\" in ", chan, " at "
                            , tShow time ]

@@ -11,15 +11,10 @@ module Parsers ( User
 import Core
 import Control.Applicative ((<$>))
 import Control.Monad.State.Lazy
-import Control.Monad.Identity
-import Data.List (foldl')
 import Data.Maybe
 import Data.Time
 import Data.Char
-import Data.Time.LocalTime
-import Data.Time.Calendar
 import Text.Parsec
-import qualified Data.Set as S
 import qualified Data.Map as M
 import qualified Data.Text as T
 
@@ -41,7 +36,7 @@ runIRCParser :: IRCParser a -> SourceName -> T.Text
 runIRCParser p s t st =
     case runState (runParserT p () s t) st of
       (Left err, _) -> Left err
-      (Right out, state) -> Right (out,state)
+      (Right out, stt) -> Right (out, stt)
 
 -------------------------------------------------------------------------------- 
 
@@ -115,27 +110,17 @@ parsePrivateMessage = do
     "!rejoin"    -> return [ReJoin]
     _            -> return [NoAction]
 
-parseCommandId :: IRCParser [IRCAction]
-parseCommandId = do 
-  text <- T.pack <$> many anyChar
-  nick <- getMsgContextSenderNick
-  chan <- getMsgContextChannel
-  t    <- getMsgContextTime
-  let time = T.pack $ show t
-  return $ [PrivMsg $ T.concat [nick, " said \"", text
-                              ,"\" in ", chan, " at ", time]]
-
 parseCommandTell :: IRCParser [IRCAction]
 parseCommandTell = do
   recipient <- parseWord
-  msg <- fmap T.pack $ many1 anyChar
+  msg <- T.pack <$> many1 anyChar
 
   cntxt <- getMessageContext
   let userMsg = UserMessage (msg, cntxt)
 
   userMsgs <- getUserMessages
   putUserMessages (M.insertWith (++) recipient [userMsg] userMsgs)
-  return $ [PrivMsg "I will tell it them, as soon as i see them"]
+  return [PrivMsg "I will tell it them, as soon as i see them"]
 
 parseCommandAfk :: IRCParser [IRCAction]
 parseCommandAfk = do
