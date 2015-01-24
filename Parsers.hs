@@ -103,6 +103,7 @@ parsePrivateMessage = do
   case command of
     "!tell"      -> parseCommandTell
     "!afk"       -> parseCommandAfk
+    "!back"      -> parseCommandBack
     "!remind"    -> parseCommandRemind
     "!waitforit" -> parseCommandWaitForIt
     "!whatsnew"  -> return newsMessage
@@ -126,13 +127,20 @@ parseCommandAfk :: IRCParser [IRCAction]
 parseCommandAfk = do
   sender <- getMsgContextSenderNick
   isAfk <- (isJust . M.findWithDefault Nothing sender) <$> getOnlineUsers
-  if isAfk then (do removeAfkUser sender
-                    return [PrivMsg "You are no longer afk"])
+  if isAfk then (return [PrivMsg "You are already afk, use !back"])
            else (do msgCntxt <- getMessageContext
                     msg <- T.pack <$> many anyChar
                     addAfkUserWithMessage sender
                              $ UserMessage (msg,msgCntxt)
                     return [PrivMsg "You are now afk"])
+
+parseCommandBack :: IRCParser [IRCAction]
+parseCommandBack = do
+  sender <- getMsgContextSenderNick
+  isAfk <- (isJust . M.findWithDefault Nothing sender) <$> getOnlineUsers
+  if isAfk then (do removeAfkUser sender
+                    return [PrivMsg "You are now no longer afk"])
+           else (return [PrivMsg "You are already back, use !afk"])
 
 parseCommandRemind :: IRCParser [IRCAction]
 parseCommandRemind = do
