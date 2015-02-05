@@ -109,6 +109,9 @@ parsePrivateMessage = do
     "!whatsnew"  -> return newsMessage
     "!say"       -> parseCommandSay
     "!rejoin"    -> return [ReJoin]
+    "!ok"        -> messageOk
+    "!pls"       -> messagePls
+    "n1"         -> messageN1
     _            -> return [NoAction]
 
 parseCommandTell :: IRCParser [IRCAction]
@@ -183,6 +186,23 @@ parseCommandSay = do
   txt <- T.pack <$> many anyChar
   return [PrivMsg txt]
 
+messageOk :: IRCParser [IRCAction]
+messageOk = do
+  return [ PrivMsg "/\\ |/"
+         , PrivMsg "\\/ |\\"] 
+
+messagePls :: IRCParser [IRCAction]
+messagePls = do
+  return [ PrivMsg " _     __"
+         , PrivMsg "|_| | |__"
+         , PrivMsg "|   |_ __|"]
+
+messageN1 :: IRCParser [IRCAction]
+messageN1 = do
+  return [ PrivMsg "|\\  |  _"
+         , PrivMsg "| \\ | /|"
+         , PrivMsg "|  \\| _|_"]
+    
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
   parseWord
