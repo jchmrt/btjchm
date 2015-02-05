@@ -199,9 +199,9 @@ messagePls = do
 
 messageN1 :: IRCParser [IRCAction]
 messageN1 = do
-  return [ PrivMsg "|\\  |  _"
-         , PrivMsg "| \\ | /|"
-         , PrivMsg "|  \\| _|_"]
+  return [ PrivMsg "|\\  |  /|"
+         , PrivMsg "| \\ |   |"
+         , PrivMsg "|  \\|  _|_"]
     
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
