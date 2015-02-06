@@ -214,9 +214,9 @@ parseCommandAscii = do
             else []
 
 toAscii :: Char -> [String]
-toAscii 'a' = [ "       "
-              , "  /\\   "
-              , " /--\\  "]
+toAscii 'a' = [ "     "
+              , " /\\  "
+              , "/--\\ "]
 toAscii 'b' = [ " _  "
               , "|_) "
               , "|_) "]
