@@ -330,6 +330,27 @@ toAscii '9' = [ " _ "
 toAscii '0' = [ " _ "
               , "| |"
               , "|_|"]
+toAscii '+' = [ "   "
+              , "_|_"
+              , " | "]
+toAscii '-' = [ "   "
+              , "___"
+              , "   "]
+toAscii '_' = [ "   "
+              , "   "
+              , "___"]
+toAscii '=' = [ "   "
+              , "---"
+              , "---"]
+toAscii '(' = [ " / "
+              , " | "
+              , " \ "]
+toAscii ')' = [ " \ "
+              , " | "
+              , " / "]
+toAscii '%' = [ "O /"
+              , " / "
+              , "/ O"]
 toAscii _   = [ "", "", ""]    
 
 parseNicksMessage :: IRCParser ()
