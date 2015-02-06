@@ -10,10 +10,12 @@ module Parsers ( User
 
 import Core
 import Control.Applicative ((<$>))
+import qualified Control.Applicative as A
 import Control.Monad.State.Lazy
 import Data.Maybe
 import Data.Time
 import Data.Char
+import Data.List
 import Text.Parsec
 import qualified Data.Map as M
 import qualified Data.Text as T
@@ -109,6 +111,7 @@ parsePrivateMessage = do
     "!whatsnew"  -> return newsMessage
     "!say"       -> parseCommandSay
     "!rejoin"    -> return [ReJoin]
+    "!ascii"     -> parseCommandAscii
     "!ok"        -> messageOk
     "!pls"       -> messagePls
     "n1"         -> messageN1
@@ -202,7 +205,103 @@ messageN1 = do
   return [ PrivMsg "|\\  |  /|"
          , PrivMsg "| \\ |   |"
          , PrivMsg "|  \\|  _|_"]
-    
+
+parseCommandAscii :: IRCParser [IRCAction]
+parseCommandAscii = do
+   txt <- many anyChar 
+   return $ if (length txt) < 30
+            then map PrivMsg $ map T.pack $ foldl1' (zipWith (++)) $ map toAscii $ map toLower txt
+            else []
+
+toAscii :: Char -> [String]
+toAscii 'a' = [ "       "
+              , "  /\\   "
+              , " /--\\  "]
+toAscii 'b' = [ " _  "
+              , "|_) "
+              , "|_) "]
+toAscii 'c' = [ " __ "
+              , "|   "
+              , "|__ "]
+toAscii 'd' = [ "__  "
+              , "| \\ "
+              , "|_/ "]
+toAscii 'e' = [ " __ "
+              , "|__ "
+              , "|__ "]
+toAscii 'f' = [ " __ "
+              , "|__ "
+              , "|   "]
+toAscii 'g' = [ " __ "
+              , "/   "
+              , "\\_] "]
+toAscii 'h' = [ "    "
+              , "|_| "
+              , "| | "]
+toAscii 'i' = [ " . "
+              , " | "
+              , " | "]
+toAscii 'j' = [ " .  "
+              , " |  "
+              , "_/  "]
+toAscii 'k' = [ "   "
+              , "|/ "
+              , "|\\ "]
+toAscii 'l' = [ "    "
+              , "|   "
+              , "|__ "]
+toAscii 'm' = [ " _    _  "
+              , "| \\  / | "
+              , "|  \\/  | "]
+toAscii 'n' = [ " _    "
+              , "| \\ | "
+              , "|  \\| "]
+toAscii 'o' = [ " _  "
+              , "/ \\ "
+              , "\\_/ "]
+toAscii 'p' = [ " _  "
+              , "|_| "
+              , "|   "]
+toAscii 'q' = [ " _  "
+              , "|_| "
+              , "  | "]
+toAscii 'r' = [ " _  "
+              , "|_| "
+              , "|\\  "]
+toAscii 's' = [ " __  "
+              , "|__  "
+              , " __| "]
+toAscii 't' = [ "___ "
+              , " |  "
+              , " |  "]
+toAscii 'u' = [ "     "
+              , "|  | "
+              , "|__| "]
+toAscii 'v' = [ "      "
+              , "\\  /  "
+              , " \\/   "]
+toAscii 'w' = [ "         "
+              , "\\  /\\  / "
+              , " \\/  \\/  "]
+toAscii 'x' = [ "    "
+              , " \\/ "
+              , " /\\ "]
+toAscii 'y' = [ "    "
+              , " \\/ "
+              , " /  "]
+toAscii 'z' = [ "__ "
+              , " / "
+              , "/_ "]
+toAscii ' ' = [ "  ", "  ", "  "]
+toAscii '.' = [ "  ", "  ", "@ "]
+toAscii '!' = [ "/\\ "
+              , "\\/ "
+              , " .  "]
+toAscii '?' = [ " _  "
+              , "( | "
+              , "  @ "]
+toAscii _   = [ "", "", ""]    
+
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
   parseWord
