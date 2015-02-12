@@ -88,8 +88,9 @@ parseMessage str oldState =
 
 introMessage,newsMessage :: [IRCAction]
 introMessage = [PrivMsg "Hey everybody, to see what's new just use !whatsnew"]
-newsMessage = [PrivMsg "What's new in btjchm: \
-                        \you should now use the !back command to say you're back instead of !afk."]
+newsMessage =
+  [PrivMsg "What's new in btjchm: \
+           \you can now use !where <nick> to see if someone's online"]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
@@ -106,6 +107,7 @@ parsePrivateMessage = do
   case command of
     "!tell"      -> parseCommandTell
     "!afk"       -> parseCommandAfk
+    "!where"     -> parseCommandWhere
     "!back"      -> parseCommandBack
     "!remind"    -> parseCommandRemind
     "!waitforit" -> parseCommandWaitForIt
@@ -140,6 +142,19 @@ parseCommandAfk = do
                     addAfkUserWithMessage sender
                              $ UserMessage (msg,msgCntxt)
                     return [PrivMsg "You are now afk"])
+
+parseCommandWhere :: IRCParser [IRCAction]
+parseCommandWhere = do
+  sender <- getMsgContextSenderNick
+  who <- parseWord
+  users <- getOnlineUsers
+  let maybeMsg = M.findWithDefault Nothing who users
+  case maybeMsg of
+   Nothing -> return [PrivMsg $ T.concat
+                      [sender, ": ", who, " is online."]]
+   Just (UserMessage (msg,cntxt)) -> return [PrivMsg $ T.concat
+                       [ sender, ": ", who, " is afk: \""
+                       , msg, "\"."]]
 
 parseCommandBack :: IRCParser [IRCAction]
 parseCommandBack = do
