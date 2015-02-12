@@ -1,6 +1,27 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Ascii (toAscii) where
+module Ascii ( toAscii
+             , messageOk
+             , messagePls
+             , messageN1  ) where
 
+import Core
+
+messageOk :: [IRCAction]
+messageOk = 
+  [ PrivMsg "/\\ |/"
+  , PrivMsg "\\/ |\\"] 
+
+messagePls :: [IRCAction]
+messagePls = 
+  [ PrivMsg " _     __"
+  , PrivMsg "|_| | |__"
+  , PrivMsg "|   |_ __|"]
+
+messageN1 :: [IRCAction]
+messageN1 = 
+  [ PrivMsg "|\\  |  /|"
+  , PrivMsg "| \\ |   |"
+  , PrivMsg "|  \\|  _|_"]
 
 toAscii :: Char -> [String]
 toAscii 'a' = [ "     "

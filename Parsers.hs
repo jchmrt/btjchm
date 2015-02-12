@@ -9,6 +9,7 @@ module Parsers ( User
                ) where
 
 import Core
+import Ascii
 import Control.Applicative ((<$>))
 import qualified Control.Applicative as A
 import Control.Monad.State.Lazy
@@ -112,9 +113,9 @@ parsePrivateMessage = do
     "!say"       -> parseCommandSay
     "!rejoin"    -> return [ReJoin]
     "!ascii"     -> parseCommandAscii
-    "!ok"        -> messageOk
-    "!pls"       -> messagePls
-    "n1"         -> messageN1
+    "!ok"        -> return messageOk
+    "!pls"       -> return messagePls
+    "n1"         -> return messageN1
     _            -> return [NoAction]
 
 parseCommandTell :: IRCParser [IRCAction]
@@ -189,196 +190,13 @@ parseCommandSay = do
   txt <- T.pack <$> many anyChar
   return [PrivMsg txt]
 
-messageOk :: IRCParser [IRCAction]
-messageOk = do
-  return [ PrivMsg "/\\ |/"
-         , PrivMsg "\\/ |\\"] 
-
-messagePls :: IRCParser [IRCAction]
-messagePls = do
-  return [ PrivMsg " _     __"
-         , PrivMsg "|_| | |__"
-         , PrivMsg "|   |_ __|"]
-
-messageN1 :: IRCParser [IRCAction]
-messageN1 = do
-  return [ PrivMsg "|\\  |  /|"
-         , PrivMsg "| \\ |   |"
-         , PrivMsg "|  \\|  _|_"]
-
 parseCommandAscii :: IRCParser [IRCAction]
 parseCommandAscii = do
    txt <- many anyChar 
    return $ if (length txt) < 30
-            then map PrivMsg $ map T.pack $ foldl1' (zipWith (++)) $ map toAscii $ map toLower txt
+            then map PrivMsg $ map T.pack $ foldl1' (zipWith (++))
+                 $ map toAscii $ map toLower txt
             else []
-
-toAscii :: Char -> [String]
-toAscii 'a' = [ "     "
-              , " /\\  "
-              , "/--\\ "]
-toAscii 'b' = [ " _  "
-              , "|_) "
-              , "|_) "]
-toAscii 'c' = [ " __ "
-              , "|   "
-              , "|__ "]
-toAscii 'd' = [ "__  "
-              , "| \\ "
-              , "|_/ "]
-toAscii 'e' = [ " __ "
-              , "|__ "
-              , "|__ "]
-toAscii 'f' = [ " __ "
-              , "|__ "
-              , "|   "]
-toAscii 'g' = [ " __ "
-              , "/   "
-              , "\\_] "]
-toAscii 'h' = [ "    "
-              , "|_| "
-              , "| | "]
-toAscii 'i' = [ " . "
-              , " | "
-              , " | "]
-toAscii 'j' = [ " .  "
-              , " |  "
-              , "_/  "]
-toAscii 'k' = [ "   "
-              , "|/ "
-              , "|\\ "]
-toAscii 'l' = [ "    "
-              , "|   "
-              , "|__ "]
-toAscii 'm' = [ " _    _  "
-              , "| \\  / | "
-              , "|  \\/  | "]
-toAscii 'n' = [ " _    "
-              , "| \\ | "
-              , "|  \\| "]
-toAscii 'o' = [ " _  "
-              , "/ \\ "
-              , "\\_/ "]
-toAscii 'p' = [ " _  "
-              , "|_| "
-              , "|   "]
-toAscii 'q' = [ " _  "
-              , "|_| "
-              , "  | "]
-toAscii 'r' = [ " _  "
-              , "|_| "
-              , "|\\  "]
-toAscii 's' = [ " __  "
-              , "|__  "
-              , " __| "]
-toAscii 't' = [ "___ "
-              , " |  "
-              , " |  "]
-toAscii 'u' = [ "     "
-              , "|  | "
-              , "|__| "]
-toAscii 'v' = [ "    "
-              , "\\ / "
-              , " V  "]
-toAscii 'w' = [ "         "
-              , "\\  /\\  / "
-              , " \\/  \\/  "]
-toAscii 'x' = [ "    "
-              , " \\/ "
-              , " /\\ "]
-toAscii 'y' = [ "    "
-              , " \\/ "
-              , " /  "]
-toAscii 'z' = [ "__ "
-              , " / "
-              , "/_ "]
-toAscii ' ' = [ "  ", "  ", "  "]
-toAscii '.' = [ "  ", "  ", ". "]
-toAscii '!' = [ " |  "
-              , " |  "
-              , " .  "]
-toAscii '?' = [ " /\\ "
-              , "  / "
-              , "  . "]
-toAscii '1' = [ "    "
-              , "  | "
-              , "  | "]
-toAscii '2' = [ " _  "
-              , " _| "
-              , "|_  "]
-toAscii '3' = [ " _  "
-              , " _| "
-              , " _| "]
-toAscii '4' = [ "    "
-              , "|_| "
-              , "  | "]
-toAscii '5' = [ " _  "
-              , "|_  "
-              , " _| "]
-toAscii '6' = [ " _  "
-              , "|_  "
-              , "|_| "]
-toAscii '7' = [ " _  "
-              , "  | "
-              , "  | "]
-toAscii '8' = [ " _  "
-              , "|_| "
-              , "|_| "]
-toAscii '9' = [ " _  "
-              , "|_| "
-              , " _| "]
-toAscii '0' = [ " _  "
-              , "| | "
-              , "|_| "]
-toAscii '+' = [ "    "
-              , "_|_ "
-              , " |  "]
-toAscii '-' = [ "    "
-              , "___ "
-              , "    "]
-toAscii '_' = [ "    "
-              , "    "
-              , "___ "]
-toAscii '=' = [ "    "
-              , "--- "
-              , "--- "]
-toAscii '(' = [ " / "
-              , "|  "
-              , " \\ "]
-toAscii ')' = [ " \\ "
-              , "  |"
-              , " / "]
-toAscii '%' = [ " O / "
-              , "  /  "
-              , " / O "]
-toAscii '\"' = [ "|| "
-              , "   "
-              , "   "]
-toAscii '\'' = [ "| "
-              , "  "
-              , "  "]
-toAscii '>' = [ "    "
-              , " \\  "
-              , " /  "]
-toAscii '<' = [ "    "
-              , " /  "
-              , " \\  "]
-toAscii '/' = [ "  / "
-              , " /  "
-              , "/   "]
-toAscii '|' = [ " | "
-              , " | "
-              , " | "]
---toAscii '\\' = [ "\   "
---              , " \  "
---              , "  \\ "]
-toAscii ':' = [ "   "
-              , " . "
-              , " . "]
-toAscii ';' = [ "   "
-              , " . "
-              , " , "]
-toAscii _   = [ "", "", ""]
 
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
