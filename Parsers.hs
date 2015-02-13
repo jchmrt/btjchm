@@ -118,7 +118,8 @@ parsePrivateMessage = do
     "!ok"        -> return messageOk
     "!pls"       -> return messagePls
     "n1"         -> return messageN1
-    _            -> return [NoAction]
+    "--debug--"  -> return [Debug]
+    _            -> return []
 
 parseCommandTell :: IRCParser [IRCAction]
 parseCommandTell = do
@@ -148,20 +149,23 @@ parseCommandWhere = do
   sender <- getMsgContextSenderNick
   who <- parseWord
   users <- getOnlineUsers
-  let maybeMsg = M.findWithDefault Nothing who users
-  case maybeMsg of
+  let maybeOnline = M.lookup who users
+  case maybeOnline of
    Nothing -> return [PrivMsg $ T.concat
-                      [sender, ": ", who, " is online."]]
-   Just (UserMessage (msg,cntxt)) -> return [PrivMsg $ T.concat
-                       [ sender, ": ", who, " is afk: \""
-                       , msg, "\"."]]
+                      [sender, ": ", who, "is offline."]]
+   Just maybeMsg -> case maybeMsg of
+     Nothing -> return [PrivMsg $ T.concat
+                        [sender, ": ", who, " is online."]]
+     Just (UserMessage (msg,cntxt)) -> return [PrivMsg $ T.concat
+                         [ sender, ": ", who, " is afk: \""
+                         , msg, "\"."]]
 
 parseCommandBack :: IRCParser [IRCAction]
 parseCommandBack = do
   sender <- getMsgContextSenderNick
   isAfk <- (isJust . M.findWithDefault Nothing sender) <$> getOnlineUsers
   if isAfk then (do removeAfkUser sender
-                    return [PrivMsg "You are now no longer afk"])
+                    return [PrivMsg "Welcome back!"])
            else (return [PrivMsg "You are already back, use !afk"])
 
 parseCommandRemind :: IRCParser [IRCAction]

@@ -79,6 +79,7 @@ eval h s ircSt = do
       (act, IRCParserState newIrcState _) = parseMessage s parserState
   case act of
     [Pong] -> pong h s
+    [Debug] -> print ircSt
     _    -> runActs h act
   return newIrcState
 
