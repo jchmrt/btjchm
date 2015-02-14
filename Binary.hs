@@ -2,8 +2,14 @@ module Binary where
 
 import Core
 import Data.Binary
-import Data.Text.Binary
+import Data.Text
+import Data.Text.Encoding
 import Binary.UTCTime
+import Control.Applicative
+
+instance Binary Text where
+  put = put . encodeUtf8
+  get = decodeUtf8 <$> get
 
 instance Binary UserMessage where
   put (UserMessage (msg, cntxt)) = do put msg
