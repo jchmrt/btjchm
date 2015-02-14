@@ -8,6 +8,7 @@ import Save
 import TimedActions
 import Network
 import System.IO
+import System.Environment
 import Data.Time
 import Control.Monad
 import qualified Data.Map as M
@@ -19,16 +20,20 @@ server :: String
 server  = "irc.freenode.org"
 port :: Int
 port    = 6667
-chan,nick,user,usermsg :: T.Text
-chan    = T.pack "#eras"
-nick    = T.pack "btjchm"
-user    = T.pack " 0 * :jchmrt's bot"
-usermsg = T.concat [nick,user]
+chan,stdNick,user,usermsg :: T.Text
+chan    = "#eras"
+stdNick = "btjchm"
+user    = " 0 * :jchmrt's bot"
+usermsg = T.concat [stdNick,user]
 
 saveFile = "state.sav"
 
 main :: IO ()
 main = do
+  args <- getArgs
+  let nick = case args of
+        [argNick] -> T.pack argNick
+        _ -> stdNick
   h <- connectTo server (PortNumber (fromIntegral port))
   hSetBuffering h NoBuffering
   write h (T.pack "NICK") nick
