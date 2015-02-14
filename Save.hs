@@ -1,14 +1,15 @@
-module Save ( writeUserMessagesToFile
-            , readUserMessagesFromFile 
+module Save ( save
+            , retrieve 
             ) where
 
 import Core
-import qualified Data.Text as T
-import qualified Data.Map as M
+import Binary
+import Data.Binary
+import qualified Data.ByteString.Lazy as L
 import Control.Applicative ((<$>))
 
-writeUserMessagesToFile :: FilePath -> M.Map User [UserMessage] -> IO ()
-writeUserMessagesToFile fp usrMessages = writeFile fp $ show usrMessages
+save :: FilePath -> IRCState -> IO ()
+save fp = L.writeFile fp . encode
 
-readUserMessagesFromFile :: FilePath -> IO (M.Map User [UserMessage])
-readUserMessagesFromFile fp = read <$> readFile fp
+retrieve :: FilePath -> IO IRCState
+retrieve fp = decode <$> L.readFile fp

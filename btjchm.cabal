@@ -48,4 +48,5 @@ executable btjchm
 
   -- Other library packages from which modules are imported.
   build-depends:     base ==4.*, containers ==0.5.*, text, time ==1.4.*
-                   , parsec ==3.1.*, mtl ==2.1.*, network
+                   , parsec ==3.1.*, mtl ==2.1.*, network, bytestring
+                   , binary, text-binary

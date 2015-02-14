@@ -5,7 +5,6 @@ module Core ( User
             , IRCAction (..)
             ) where
  
-import Control.Monad.State
 import qualified Data.Text as T
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -45,4 +44,4 @@ data IRCAction = PrivMsg { privMsgText :: T.Text }
                | Leave
                | Quit
                | NoAction
-    deriving Show
+    deriving (Show, Eq)

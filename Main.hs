@@ -25,7 +25,7 @@ nick    = T.pack "btjchm"
 user    = T.pack " 0 * :jchmrt's bot"
 usermsg = T.concat [nick,user]
 
-userMessagesFile = "userMessages.sav"
+saveFile = "state.sav"
 
 main :: IO ()
 main = do
@@ -34,9 +34,9 @@ main = do
   write h (T.pack "NICK") nick
   write h (T.pack "USER") usermsg
   write h (T.pack "JOIN") chan
-  usrMessages <- readUserMessagesFromFile userMessagesFile
-  let emptyState = IRCState usrMessages M.empty []
-  listen h emptyState
+  (IRCState msgs _ acts) <- retrieve saveFile
+  let newState = IRCState msgs M.empty acts
+  listen h newState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
 write h s t = do
@@ -67,10 +67,11 @@ listen h st = do
   runActs h tellActs
   runActs h timedActsToRun
 
-  when (newUsrMessages /= oldUsrMessages)
-    $ writeUserMessagesToFile userMessagesFile newUsrMessages
+  when (newUsrMessages /= oldUsrMessages
+     || newTimedActs /= timedActs)
+    $ save saveFile
+        (IRCState newUsrMessages M.empty newTimedActs)
   listen h nst'
-
 
 eval :: Handle -> T.Text -> IRCState -> IO IRCState
 eval h s ircSt = do
