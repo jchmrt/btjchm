@@ -137,12 +137,15 @@ parseCommandAfk :: IRCParser [IRCAction]
 parseCommandAfk = do
   sender <- getMsgContextSenderNick
   isAfk <- (isJust . M.findWithDefault Nothing sender) <$> getOnlineUsers
-  if isAfk then (return [PrivMsg "You are already afk, use !back"])
-           else (do msgCntxt <- getMessageContext
-                    msg <- T.pack <$> many anyChar
-                    addAfkUserWithMessage sender
-                             $ UserMessage (msg,msgCntxt)
-                    return [PrivMsg "You are now afk"])
+  msgCntxt <- getMessageContext
+  msg <- T.pack <$> many anyChar
+  addAfkUserWithMessage sender
+    $ UserMessage (msg,msgCntxt)
+  if isAfk then (return [PrivMsg $ T.concat
+                   [ "You were already afk, \
+                     \your new afk message is: \""
+                   , msg, "\""]])
+           else (return [PrivMsg "You are now afk"])
 
 parseCommandWhere :: IRCParser [IRCAction]
 parseCommandWhere = do
