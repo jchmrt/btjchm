@@ -58,7 +58,7 @@ listen h st = do
   time <- getCurrentTime
 
   let (IRCState usrMessages usrs timedActs) = nst
-      (IRCState oldUsrMessages _ _) = st
+      (IRCState oldUsrMessages _ oldTimedActs) = st
       (tellActs, newUsrMessages) = tellAll usrs usrMessages
 
       (timedActsToRun,newTimedActs) = updateTimedActions time timedActs
@@ -68,9 +68,9 @@ listen h st = do
   runActs h timedActsToRun
 
   when (newUsrMessages /= oldUsrMessages
-     || newTimedActs /= timedActs)
-    $ save saveFile
-        (IRCState newUsrMessages M.empty newTimedActs)
+     || newTimedActs /= oldTimedActs)
+    (save saveFile
+        (IRCState newUsrMessages M.empty newTimedActs) >> putStrLn "-- Saving --")
   listen h nst'
 
 eval :: Handle -> T.Text -> IRCState -> IO IRCState
