@@ -4,6 +4,7 @@ import Core
 import Data.Binary
 import Data.Text.Binary
 import Binary.UTCTime
+import Control.Applicative
 
 instance Binary UserMessage where
   put (UserMessage (msg, cntxt)) = do put msg
@@ -47,7 +48,7 @@ instance Binary IRCAction where
   get = do
     t <- getWord8
     case t of
-     0 -> get >>= (return . PrivMsg)
+     0 -> PrivMsg <$> get
      1 -> return Debug
      2 -> return Pong
      3 -> return ReJoin
