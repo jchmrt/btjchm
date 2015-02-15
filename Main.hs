@@ -8,6 +8,7 @@ import Save
 import TimedActions
 import Network
 import System.IO
+import System.Random
 import System.Environment
 import Data.Time
 import Control.Monad
@@ -39,8 +40,10 @@ main = do
   write h (T.pack "NICK") nick
   write h (T.pack "USER") usermsg
   write h (T.pack "JOIN") chan
-  (IRCState msgs _ acts) <- retrieve saveFile
-  let newState = IRCState msgs M.empty acts
+  (IRCState msgs _ acts _) <- retrieve saveFile
+  g <- newStdGen
+  let key = T.pack $ take 4 $ randomRs ('a','z') g
+      newState = IRCState msgs M.empty acts key
   listen h newState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
@@ -62,12 +65,12 @@ listen h st = do
           else return st)
   time <- getCurrentTime
 
-  let (IRCState usrMessages usrs timedActs) = nst
-      (IRCState oldUsrMessages _ oldTimedActs) = st
+  let (IRCState usrMessages usrs timedActs _) = nst
+      (IRCState oldUsrMessages _ oldTimedActs key) = st
       (tellActs, newUsrMessages) = tellAll usrs usrMessages
 
       (timedActsToRun,newTimedActs) = updateTimedActions time timedActs
-      nst' = IRCState newUsrMessages usrs newTimedActs
+      nst' = IRCState newUsrMessages usrs newTimedActs key
 
   runActs h tellActs
   runActs h timedActsToRun
@@ -75,7 +78,8 @@ listen h st = do
   when (newUsrMessages /= oldUsrMessages
      || newTimedActs /= oldTimedActs)
     (save saveFile
-        (IRCState newUsrMessages M.empty newTimedActs) >> putStrLn "-- Saving --")
+        (IRCState newUsrMessages M.empty newTimedActs T.empty)
+        >> putStrLn "-- Saving --")
   listen h nst'
 
 eval :: Handle -> T.Text -> IRCState -> IO IRCState
@@ -85,7 +89,6 @@ eval h s ircSt = do
       (act, IRCParserState newIrcState _) = parseMessage s parserState
   case act of
     [Pong] -> pong h s
-    [Debug] -> print ircSt
     _    -> runActs h act
   return newIrcState
 
@@ -95,6 +98,7 @@ runActs h = mapM_ (runAct h)
 runAct :: Handle -> IRCAction -> IO ()
 runAct h (PrivMsg t)    = privmsg h t
 runAct h ReJoin         = write h "JOIN" chan
+runAct h (Debug msg)    = TIO.putStrLn msg
 runAct h (ChangeNick n) = changeNick h n
 runAct _ _              = return ()
 

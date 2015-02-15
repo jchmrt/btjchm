@@ -26,6 +26,8 @@ data IRCState = IRCState
     -- otherwise nothing
   , timedActions :: [(UTCTime, [IRCAction])]
     -- ^ The actions to execute at a certain time.
+  , key :: T.Text
+    -- ^ The key of this bot process
   } deriving Show
 
 data MessageContext =
@@ -39,7 +41,7 @@ data MessageContext =
 -- to be run by runAct in Main.
 data IRCAction = PrivMsg { privMsgText :: T.Text }
                | ChangeNick { nick :: T.Text }
-               | Debug
+               | Debug { debugText :: T.Text }
                | Pong
                | ReJoin
                | Leave

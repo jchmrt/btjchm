@@ -2,12 +2,12 @@ module Binary where
 
 import Core
 import Data.Binary
-import Data.Text
+import qualified Data.Text as T
 import Data.Text.Encoding
 import Binary.UTCTime
 import Control.Applicative
 
-instance Binary Text where
+instance Binary T.Text where
   put = put . encodeUtf8
   get = decodeUtf8 <$> get
 
@@ -19,14 +19,14 @@ instance Binary UserMessage where
            return (UserMessage (msg,cntxt))
 
 instance Binary IRCState where
-  put (IRCState msgs usrs acts) = do
+  put (IRCState msgs usrs acts _) = do
     put msgs
     put usrs
     put acts
   get = do msgs <- get
            usrs <- get
            acts <- get
-           return $ IRCState msgs usrs acts
+           return $ IRCState msgs usrs acts T.empty
 
 instance Binary MessageContext where
   put (MessageContext nick full channel time) = do
@@ -43,7 +43,7 @@ instance Binary MessageContext where
 
 instance Binary IRCAction where
   put (PrivMsg msg)  = putWord8 0 >> put msg
-  put Debug          = putWord8 1
+  put (Debug  msg)   = putWord8 1 >> put msg
   put Pong           = putWord8 2
   put ReJoin         = putWord8 3
   put Leave          = putWord8 4
@@ -55,8 +55,8 @@ instance Binary IRCAction where
     t <- getWord8
     case t of
      0 -> PrivMsg <$> get
+     1 -> Debug <$> get
      7 -> ChangeNick <$> get
-     1 -> return Debug
      2 -> return Pong
      3 -> return ReJoin
      4 -> return Leave

@@ -121,10 +121,25 @@ parsePrivateMessage = do
     "!ok"        -> return messageOk
     "!pls"       -> return messagePls
     "n1"         -> return messageN1
-    "--debug--"  -> return [Debug]
+    "--key--"    -> do key <- getKey
+                       return [Debug $ T.concat
+                               [ "--- Key ---\n", key
+                               , "\n"]]
+    "--debug--"  -> do state <- getIRCState
+                       real <- authenticate
+                       if real
+                         then return [Debug $ T.pack $ show state]
+                         else return []
     "--nick--"   -> do n <- parseWord
-                       return [ChangeNick n]
+                       real <- authenticate
+                       if real
+                         then return [ChangeNick n]
+                         else return []
     _            -> return []
+
+authenticate = do realKey <- getKey
+                  givenKey <- parseWord
+                  return (realKey == givenKey)
 
 parseCommandTell :: IRCParser [IRCAction]
 parseCommandTell = do
@@ -284,6 +299,9 @@ getOnlineUsers = gets $ onlineUsers . ircState
 
 getTimedActions :: IRCParser [(UTCTime, [IRCAction])]
 getTimedActions = gets $ timedActions . ircState
+
+getKey :: IRCParser T.Text
+getKey = gets $ key . ircState
 
 getMsgContextSenderNick :: IRCParser T.Text
 getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
