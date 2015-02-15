@@ -192,7 +192,6 @@ parseCommandRemind = do
   addTimedAction (actionTime, [PrivMsg $ T.concat [recipient'
                                                   ,": ", msg]])
   return [PrivMsg "Will do!"]
-        
 
 parseCommandWaitForIt :: IRCParser [IRCAction]
 parseCommandWaitForIt = do
