@@ -9,6 +9,7 @@ module Parsers ( User
                ) where
 
 import Core
+import Color
 import Ascii
 import Control.Applicative ((<$>))
 import qualified Control.Applicative as A
@@ -87,7 +88,9 @@ parseMessage str oldState =
             Right actAndState -> actAndState
 
 introMessage,newsMessage :: [IRCAction]
-introMessage = [PrivMsg "Hey everybody, to see what's new just use !whatsnew"]
+introMessage = [PrivMsg $ T.concat
+                [ "Hey everybody, to see what's new just use ", bold
+                , "!whatsnew", reset]]
 newsMessage =
   [PrivMsg "What's new in btjchm: \
            \you can now use !where <nick> to see if someone's online"]
@@ -155,13 +158,13 @@ parseCommandWhere = do
   let maybeOnline = M.lookup who users
   case maybeOnline of
    Nothing -> return [PrivMsg $ T.concat
-                      [sender, ": ", who, " is offline."]]
+                      [fColor Orange, sender, ": ", who, " is offline."]]
    Just maybeMsg -> case maybeMsg of
      Nothing -> return [PrivMsg $ T.concat
-                        [sender, ": ", who, " is online."]]
+                        [fColor Green, sender, ": ", who, " is online."]]
      Just (UserMessage (msg,cntxt)) -> return [PrivMsg $ T.concat
-                         [ sender, ": ", who, " is afk: \""
-                         , msg, "\"."]]
+                         [ fColor Yellow, sender, ": ", who
+                         , " is afk: \"", msg, "\"."]]
 
 parseCommandBack :: IRCParser [IRCAction]
 parseCommandBack = do
