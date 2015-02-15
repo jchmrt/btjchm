@@ -155,7 +155,7 @@ parseCommandWhere = do
   let maybeOnline = M.lookup who users
   case maybeOnline of
    Nothing -> return [PrivMsg $ T.concat
-                      [sender, ": ", who, "is offline."]]
+                      [sender, ": ", who, " is offline."]]
    Just maybeMsg -> case maybeMsg of
      Nothing -> return [PrivMsg $ T.concat
                         [sender, ": ", who, " is online."]]
