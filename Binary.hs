@@ -42,18 +42,20 @@ instance Binary MessageContext where
     return (MessageContext nick full channel time)
 
 instance Binary IRCAction where
-  put (PrivMsg msg) = putWord8 0 >> put msg
-  put Debug         = putWord8 1
-  put Pong          = putWord8 2
-  put ReJoin        = putWord8 3
-  put Leave         = putWord8 4
-  put Quit          = putWord8 5
-  put NoAction      = putWord8 6
+  put (PrivMsg msg)  = putWord8 0 >> put msg
+  put Debug          = putWord8 1
+  put Pong           = putWord8 2
+  put ReJoin         = putWord8 3
+  put Leave          = putWord8 4
+  put Quit           = putWord8 5
+  put NoAction       = putWord8 6
+  put (ChangeNick n) = putWord8 7 >> put n
 
   get = do
     t <- getWord8
     case t of
      0 -> PrivMsg <$> get
+     7 -> ChangeNick <$> get
      1 -> return Debug
      2 -> return Pong
      3 -> return ReJoin

@@ -122,6 +122,8 @@ parsePrivateMessage = do
     "!pls"       -> return messagePls
     "n1"         -> return messageN1
     "--debug--"  -> return [Debug]
+    "--nick--"   -> do n <- parseWord
+                       return [ChangeNick n]
     _            -> return []
 
 parseCommandTell :: IRCParser [IRCAction]

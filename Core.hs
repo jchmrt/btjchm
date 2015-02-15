@@ -38,6 +38,7 @@ data MessageContext =
 -- |A data type representing an action the irc bot can take, intended
 -- to be run by runAct in Main.
 data IRCAction = PrivMsg { privMsgText :: T.Text }
+               | ChangeNick { nick :: T.Text }
                | Debug
                | Pong
                | ReJoin

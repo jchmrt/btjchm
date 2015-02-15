@@ -45,8 +45,8 @@ main = do
 
 write :: Handle -> T.Text -> T.Text -> IO ()
 write h s t = do
-  TIO.hPutStr h $ T.concat [s, T.pack " ", t, T.pack "\r\n"]
-  TIO.putStrLn $ T.concat [T.pack ">  ", s, T.pack " ", t]
+  TIO.hPutStr h $ T.concat [s, " ", t, "\r\n"]
+  TIO.putStrLn $ T.concat [">  ", s, " ", t]
 
 listen :: Handle -> IRCState -> IO ()
 listen h st = do
@@ -93,12 +93,16 @@ runActs :: Handle -> [IRCAction] -> IO ()
 runActs h = mapM_ (runAct h) 
 
 runAct :: Handle -> IRCAction -> IO ()
-runAct h (PrivMsg t) = privmsg h t
-runAct h ReJoin      = write h (T.pack "JOIN") chan
-runAct _ _           = return ()
+runAct h (PrivMsg t)    = privmsg h t
+runAct h ReJoin         = write h "JOIN" chan
+runAct h (ChangeNick n) = changeNick h n
+runAct _ _              = return ()
 
 privmsg :: Handle -> T.Text -> IO ()
-privmsg h s = write h (T.pack "PRIVMSG ") $ T.concat [chan,T.pack " :",s]
+privmsg h s = write h "PRIVMSG " $ T.concat [chan," :",s]
 
 pong :: Handle -> T.Text -> IO ()
-pong h s = write h (T.pack "PONG") $ T.concat [":",T.drop 6 s]
+pong h s = write h "PONG" $ T.concat [":",T.drop 6 s]
+
+changeNick :: Handle -> T.Text -> IO ()
+changeNick h new = write h "NICK" new
