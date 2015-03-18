@@ -75,11 +75,12 @@ listen h st = do
   runActs h tellActs
   runActs h timedActsToRun
 
-  when (newUsrMessages /= oldUsrMessages
+  if (newUsrMessages /= oldUsrMessages
      || newTimedActs /= oldTimedActs)
-    (save saveFile
-        (IRCState newUsrMessages M.empty newTimedActs T.empty)
-        >> putStrLn "-- Saving --")
+    then do save saveFile $ IRCState newUsrMessages M.empty
+                                     newTimedActs T.empty
+            putStrLn "-- Saving --"
+    else return ()
   listen h nst'
 
 eval :: Handle -> T.Text -> IRCState -> IO IRCState
