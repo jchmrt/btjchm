@@ -30,7 +30,7 @@ tellMessages recipient usrMessages =
                         , tShow $ length usrMessages
                         , " messages:" ]]
     ++
-    zipWith (curry makeMessage) [1..] usrMessages
+    zipWith (curry makeMessage) [1..] (reverse usrMessages)
   where 
     makeMessage (n, UserMessage
       (txt, MessageContext nick _ chan time)) =
