@@ -14,6 +14,7 @@ import Ascii
 import Control.Applicative ((<$>))
 import qualified Control.Applicative as A
 import Control.Monad.State.Lazy
+import System.Random
 import Data.Maybe
 import Data.Time
 import Data.Char
@@ -93,7 +94,7 @@ introMessage = [PrivMsg $ T.concat
                 , "!whatsnew", reset]]
 newsMessage =
   [PrivMsg "What's new in btjchm: \
-           \you can now use !where <nick> to see if someone's online"]
+           \You can now let me choose for you with the !choose command"]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
@@ -112,6 +113,7 @@ parsePrivateMessage = do
     "!afk"       -> parseCommandAfk
     "!where"     -> parseCommandWhere
     "!back"      -> parseCommandBack
+    "!choose"    -> parseCommandChoose
     "!remind"    -> parseCommandRemind
     "!waitforit" -> parseCommandWaitForIt
     "!whatsnew"  -> return newsMessage
@@ -190,6 +192,16 @@ parseCommandBack = do
   if isAfk then (do removeAfkUser sender
                     return [PrivMsg "Welcome back!"])
            else (return [PrivMsg "You are already back, use !afk"])
+
+parseCommandChoose :: IRCParser [IRCAction]
+parseCommandChoose = do
+  choices <- many1 $ parseEntity
+  let choose xs = do
+        i <- getRandomR (0, length xs - 1)
+        return (xs !! i)
+  choice <- choose choices
+  return [PrivMsg $ T.concat ["I talked it over with DeepThought \
+                              \and we decided on: ", bold, choice]]
 
 parseCommandRemind :: IRCParser [IRCAction]
 parseCommandRemind = do
@@ -278,6 +290,17 @@ parseJoinMessage = do
   nick <- parseTill '!'
   addOnlineUser nick
 
+parseEntity :: Monad m => ParsecT T.Text u m T.Text
+parseEntity = do
+  try (do char '"'
+          content <- parseTill '"'
+          char ' '
+          return content)
+    <|> try (do char '"'
+                content <- parseTill '"'
+                return content)
+    <|> parseWord
+
 parseWord :: Monad m => ParsecT T.Text u m T.Text
 parseWord = try (parseTill ' ') <|> T.pack <$> many1 anyChar
 parseTill :: Monad m => Char -> ParsecT T.Text u m T.Text
@@ -302,6 +325,9 @@ getTimedActions = gets $ timedActions . ircState
 
 getKey :: IRCParser T.Text
 getKey = gets $ key . ircState
+
+getRandomGen :: IRCParser StdGen
+getRandomGen = gets $ randomGen . ircState
 
 getMsgContextSenderNick :: IRCParser T.Text
 getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
@@ -340,6 +366,11 @@ putTimedActions :: [(UTCTime, [IRCAction])] -> IRCParser ()
 putTimedActions new = do
   old <- getIRCState
   putIRCState $ old { timedActions = new }
+
+putRandomGen :: StdGen -> IRCParser ()
+putRandomGen new = do
+  old <- getIRCState
+  putIRCState $ old { randomGen = new }
 
 putMsgContextSenderNick :: T.Text -> IRCParser ()
 putMsgContextSenderNick new = do
@@ -386,3 +417,10 @@ addTimedAction :: (UTCTime, [IRCAction]) -> IRCParser ()
 addTimedAction timedAct = do
   old <- getTimedActions
   putTimedActions (timedAct:old)
+
+getRandomR :: Random a => (a, a) -> IRCParser a
+getRandomR range = do
+  g <- getRandomGen
+  let (a, g') = randomR range g
+  putRandomGen g'
+  return a

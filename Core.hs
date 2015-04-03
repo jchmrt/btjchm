@@ -5,6 +5,7 @@ module Core ( User
             , IRCAction (..)
             ) where
  
+import System.Random
 import qualified Data.Text as T
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -28,6 +29,8 @@ data IRCState = IRCState
     -- ^ The actions to execute at a certain time.
   , key :: T.Text
     -- ^ The key of this bot process
+  , randomGen :: StdGen
+    -- ^ The seed used to create random values
   } deriving Show
 
 data MessageContext =

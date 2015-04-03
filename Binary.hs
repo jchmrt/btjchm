@@ -19,14 +19,16 @@ instance Binary UserMessage where
            return (UserMessage (msg,cntxt))
 
 instance Binary IRCState where
-  put (IRCState msgs usrs acts _) = do
+  put (IRCState msgs usrs acts _ gen) = do
     put msgs
     put usrs
     put acts
+    put $ show gen
   get = do msgs <- get
            usrs <- get
            acts <- get
-           return $ IRCState msgs usrs acts T.empty
+           gen <- read <$> get
+           return $ IRCState msgs usrs acts T.empty gen
 
 instance Binary MessageContext where
   put (MessageContext nick full channel time) = do
