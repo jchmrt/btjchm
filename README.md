@@ -21,3 +21,21 @@ TimedActions.hs we have some code to determine which scheduled
 actions should be executed and to update the list of timed
 actions. And lastly we have all the incoming messages from the server
 being parsed in Parsers.hs
+
+List of commands:
+
+- !tell
+- !afk
+- !back
+- !where
+- !choose
+- !answer (kindof)
+- !remind
+- !waitforit
+- !whatsnew
+- !say
+- !rejoin
+- !ascii
+- !ok
+- !pls
+- n1

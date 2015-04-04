@@ -114,6 +114,7 @@ parsePrivateMessage = do
     "!where"     -> parseCommandWhere
     "!back"      -> parseCommandBack
     "!choose"    -> parseCommandChoose
+    "!answer"    -> parseCommandAnswer
     "!remind"    -> parseCommandRemind
     "!waitforit" -> parseCommandWaitForIt
     "!whatsnew"  -> return newsMessage
@@ -202,6 +203,17 @@ parseCommandChoose = do
   choice <- choose choices
   return [PrivMsg $ T.concat ["I talked it over with DeepThought \
                               \and we decided on: ", bold, choice]]
+
+parseCommandAnswer :: IRCParser [IRCAction]
+parseCommandAnswer = do
+  question <- manyTill anyChar (char '?')
+  choices <- many1 $ parseEntity
+  let choose xs g = xs !! fst (randomR (0, length xs - 1) g)
+      g = read (question ++ (T.unpack $ T.concat choices)) :: StdGen
+      choice = choose choices g
+  return [PrivMsg $ T.concat ["42! Oh wait, wasn't supposed to use \
+                              \that one anymore. This one then I guess: "
+                             , bold, choice]]
 
 parseCommandRemind :: IRCParser [IRCAction]
 parseCommandRemind = do
