@@ -20,6 +20,7 @@ import Data.Time
 import Data.Char
 import Data.List
 import Text.Parsec
+import qualified Text.Read as R
 import qualified Data.Map as M
 import qualified Data.Text as T
 
@@ -209,7 +210,8 @@ parseCommandAnswer = do
   question <- manyTill anyChar (char '?')
   choices <- many1 $ parseEntity
   let choose xs g = xs !! fst (randomR (0, length xs - 1) g)
-      g = read (question ++ (T.unpack $ T.concat choices)) :: StdGen
+      g = fst $ head
+        $ R.reads (question ++ (T.unpack $ T.concat choices)) :: StdGen
       choice = choose choices g
   return [PrivMsg $ T.concat ["42! Oh wait, wasn't supposed to use \
                               \that one anymore. This one then I guess: "
@@ -287,8 +289,12 @@ parseNickMessage = do
   parseWord
   char ':'
   newNick <- parseWord
+  onlineUsers <- getOnlineUsers
+  let maybeMsg = M.findWithDefault Nothing oldNick onlineUsers
   removeOnlineUser oldNick
-  addOnlineUser newNick
+  case maybeMsg of
+   Nothing -> addOnlineUser newNick
+   Just msg -> addAfkUserWithMessage newNick msg
 
 parsePartMessage :: IRCParser ()
 parsePartMessage = do
