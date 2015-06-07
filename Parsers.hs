@@ -203,8 +203,7 @@ parseCommandChoose = do
         i <- getRandomR (0, length xs - 1)
         return (xs !! i)
   choice <- choose choices
-  return [PrivMsg $ T.concat ["I talked it over with DeepThought \
-                              \and we decided on: ", bold, choice]]
+  return [PrivMsg $ T.concat ["I decided on: ", bold, choice]]
 
 parseCommandAnswer :: IRCParser [IRCAction]
 parseCommandAnswer = do
@@ -214,8 +213,7 @@ parseCommandAnswer = do
       g = fst $ head
         $ R.reads (question ++ (T.unpack $ T.concat choices)) :: StdGen
       choice = choose choices g
-  return [PrivMsg $ T.concat ["42! Oh wait, wasn't supposed to use \
-                              \that one anymore. This one then I guess: "
+  return [PrivMsg $ T.concat ["I guess: "
                              , bold, choice]]
 
 parseCommandRemind :: IRCParser [IRCAction]
