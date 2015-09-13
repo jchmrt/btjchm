@@ -23,6 +23,15 @@ messageN1 =
   , PrivMsg "| \\ |   |"
   , PrivMsg "|  \\|  _|_"]
 
+messageZwaarleven :: [IRCAction]
+messageZwaarleven =
+  [ PrivMsg "        ____"
+  , PrivMsg " ______|    |______"
+  , PrivMsg "|                  |"
+  , PrivMsg "| 999999999999 KG  |  <--- Jouw leven"
+  , PrivMsg "|__________________|"
+  , PrivMsg "         ^--------------- ZOOOOOO ZWAAAAAR"]
+
 toAscii :: Char -> [String]
 toAscii 'a' = [ "     "
               , " /\\  "
