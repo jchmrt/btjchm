@@ -26,7 +26,7 @@ messageN1 =
 messageZwaarleven :: [IRCAction]
 messageZwaarleven =
   [ PrivMsg "        ____"
-  , PrivMsg " ______|    |______"
+  , PrivMsg " ______|____|______"
   , PrivMsg "|                  |"
   , PrivMsg "| 999999999999 KG  |  <--- Jouw leven"
   , PrivMsg "|__________________|"
