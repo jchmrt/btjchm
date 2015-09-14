@@ -30,8 +30,7 @@ messageZwaarleven =
   , PrivMsg " ______|____|______"
   , PrivMsg "|                  |"
   , PrivMsg "| 999999999999 KG  |  <--- Jouw leven"
-  , PrivMsg "|__________________|"
-  , PrivMsg "         ^--------------- ZOOOOOO ZWAAAAAR"]
+  , PrivMsg "|__________________|"]
 
 toAscii :: Char -> [String]
 toAscii 'a' = [ "     "
