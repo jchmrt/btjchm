@@ -195,7 +195,7 @@ parseCommandBack = do
   isAfk <- (isJust . M.findWithDefault Nothing sender) <$> getOnlineUsers
   if isAfk then (do removeAfkUser sender
                     return [PrivMsg "Welcome back!"])
-           else (return [PrivMsg "You are already back, use !afk"])
+           else (return [PrivMsg "Goodness! Your status seems to already be 'back', good sir! Please pardon me when I suggest you to use '!afk'."])
 
 parseCommandChoose :: IRCParser [IRCAction]
 parseCommandChoose = do
@@ -222,7 +222,7 @@ parseCommandRemind = do
   currentTime <- getMsgContextTime
   recipient <- parseWord
   number <- manyTill digit (try $ char ' ')
-  unit <- oneOf "smh"
+  unit <- oneOf "smhdwMy"
   char ' '
   recipient' <- case recipient of
                   "me" -> getMsgContextSenderNick
@@ -231,6 +231,10 @@ parseCommandRemind = do
         's' -> 1
         'm' -> 60
         'h' -> 3600
+        'd' -> 86400
+        'w' -> 604800
+        'M' -> 2592000
+        'y' -> 31536000
       n = read number :: Int
       seconds = n * multiplier
       actionTime = addUTCTime (fromIntegral seconds) currentTime
