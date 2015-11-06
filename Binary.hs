@@ -7,9 +7,11 @@ import Data.Text.Encoding
 import Binary.UTCTime
 import Control.Applicative
 
-instance Binary T.Text where
-  put = put . encodeUtf8
-  get = decodeUtf8 <$> get
+-- Uncomment these if the Binary Text instance isn't defined yet for
+-- you:
+-- instance Binary T.Text where
+--   put = put . encodeUtf8
+--   get = decodeUtf8 <$> get
 
 instance Binary UserMessage where
   put (UserMessage (msg, cntxt)) = do put msg
