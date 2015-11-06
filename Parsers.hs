@@ -17,6 +17,7 @@ import Control.Monad.State.Lazy
 import System.Random
 import Data.Maybe
 import Data.Time
+import Data.Time.Format
 import Data.Char
 import Data.List
 import Text.Parsec
@@ -217,6 +218,11 @@ parseCommandAnswer = do
   return [PrivMsg $ T.concat ["I guess: "
                              , bold, choice]]
 
+createTimeString :: UTCTime -> IRCParser String
+createTimeString time = do
+  zone <- getOurTimeZone
+  return $ formatTime defaultTimeLocale "%A %e %B %H:%M:%S %Y" $ utcToZonedTime zone time
+
 parseCommandRemind :: IRCParser [IRCAction]
 parseCommandRemind = do
   currentTime <- getMsgContextTime
@@ -241,7 +247,9 @@ parseCommandRemind = do
   msg <- T.pack <$> many1 anyChar
   addTimedAction (actionTime, [PrivMsg $ T.concat [recipient'
                                                   ,": ", msg]])
-  return [PrivMsg "Will do!"]
+  timeMsg <- createTimeString actionTime
+  return [PrivMsg $ T.concat ["Okay, I will remind you on "
+                             , T.pack timeMsg]]
 
 parseCommandWaitForIt :: IRCParser [IRCAction]
 parseCommandWaitForIt = do
@@ -350,6 +358,9 @@ getKey = gets $ key . ircState
 
 getRandomGen :: IRCParser StdGen
 getRandomGen = gets $ randomGen . ircState
+
+getOurTimeZone :: IRCParser TimeZone
+getOurTimeZone = gets $ timeZone . ircState
 
 getMsgContextSenderNick :: IRCParser T.Text
 getMsgContextSenderNick = gets $ msgContextSenderNick . messageContext
