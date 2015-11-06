@@ -31,6 +31,8 @@ data IRCState = IRCState
     -- ^ The key of this bot process
   , randomGen :: StdGen
     -- ^ The seed used to create random values
+  , timeZone :: TimeZone
+    -- ^ The current time zone
   } deriving Show
 
 data MessageContext =

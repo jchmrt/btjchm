@@ -19,7 +19,9 @@ instance Binary UserMessage where
            return (UserMessage (msg,cntxt))
 
 instance Binary IRCState where
-  put (IRCState msgs usrs acts _ gen) = do
+  -- The time zone isn't saved or retrieved, since it should be
+  -- reinitialized on each start.
+  put (IRCState msgs usrs acts _ gen _) = do
     put msgs
     put usrs
     put acts
@@ -28,7 +30,7 @@ instance Binary IRCState where
            usrs <- get
            acts <- get
            gen <- read <$> get
-           return $ IRCState msgs usrs acts T.empty gen
+           return $ IRCState msgs usrs acts T.empty gen undefined
 
 instance Binary MessageContext where
   put (MessageContext nick full channel time) = do

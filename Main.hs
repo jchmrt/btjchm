@@ -40,10 +40,11 @@ main = do
   write h (T.pack "NICK") nick
   write h (T.pack "USER") usermsg
   write h (T.pack "JOIN") chan
-  (IRCState msgs _ acts _ gen) <- retrieve saveFile
+  (IRCState msgs _ acts _ gen _) <- retrieve saveFile
   g <- newStdGen
+  zone <- getCurrentTimeZone
   let key = T.pack $ take 4 $ randomRs ('a','z') g
-      newState = IRCState msgs M.empty acts key gen
+      newState = IRCState msgs M.empty acts key gen zone
   listen h newState
 
 write :: Handle -> T.Text -> T.Text -> IO ()
@@ -65,12 +66,12 @@ listen h st = do
           else return st)
   time <- getCurrentTime
 
-  let (IRCState oldUsrMessages _ oldTimedActs key oldGen) = st
-      (IRCState usrMessages usrs timedActs _ newGen) = nst
+  let (IRCState oldUsrMessages _ oldTimedActs key oldGen zone) = st
+      (IRCState usrMessages usrs timedActs _ newGen _) = nst
       (tellActs, newUsrMessages) = tellAll usrs usrMessages
 
       (timedActsToRun,newTimedActs) = updateTimedActions time timedActs
-      nst' = IRCState newUsrMessages usrs newTimedActs key newGen
+      nst' = IRCState newUsrMessages usrs newTimedActs key newGen zone
 
   runActs h tellActs
   runActs h timedActsToRun
@@ -79,7 +80,7 @@ listen h st = do
      || newTimedActs /= oldTimedActs
      || show oldGen /= show newGen)
     then do save saveFile $ IRCState newUsrMessages M.empty
-                                     newTimedActs T.empty newGen
+                                     newTimedActs T.empty newGen zone
             putStrLn "-- Saving --"
     else return ()
   listen h nst'
