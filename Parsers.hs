@@ -248,7 +248,9 @@ parseCommandRemind = do
   addTimedAction (actionTime, [PrivMsg $ T.concat [recipient'
                                                   ,": ", msg]])
   timeMsg <- createTimeString actionTime
-  return [PrivMsg $ T.concat ["Okay, I will remind you on "
+  return [PrivMsg $ T.concat [ "Okay, I will remind "
+                             , recipient
+                             , " on "
                              , T.pack timeMsg]]
 
 parseCommandWaitForIt :: IRCParser [IRCAction]
