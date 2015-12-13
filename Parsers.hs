@@ -45,7 +45,7 @@ runIRCParser p s t st =
       (Left err, _) -> Left err
       (Right out, stt) -> Right (out, stt)
 
--------------------------------------------------------------------------------- 
+--------------------------------------------------------------------------------
 
 -- | Represents an message
 data MessageType = PrivateMessage
@@ -61,7 +61,7 @@ parseMessageType = do
   isPing <- parseWord
   case isPing of
     "PING" -> return PingMessage
-    _      -> do 
+    _      -> do
       msgType <- parseWord
       case msgType of
           "PRIVMSG" -> return PrivateMessage
@@ -265,7 +265,7 @@ parseCommandWaitForIt = do
 
   addTimedAction (actionTime, [PrivMsg "DARY", PrivMsg "LEGENDARY!!!"])
   return [PrivMsg "LEGEN", PrivMsg "wait for it..."]
-         
+
 parseCommandSay :: IRCParser [IRCAction]
 parseCommandSay = do
   txt <- T.pack <$> many anyChar
@@ -273,7 +273,7 @@ parseCommandSay = do
 
 parseCommandAscii :: IRCParser [IRCAction]
 parseCommandAscii = do
-   txt <- many anyChar 
+   txt <- many1 anyChar
    return $ if (length txt) < 30
             then map PrivMsg $ map T.pack $ foldl1' (zipWith (++))
                  $ map toAscii $ map toLower txt
@@ -294,7 +294,7 @@ parseNick :: IRCParser User
 parseNick = do
   try (string "@") <|> try (string "+") <|> return ""
   parseWord
-  
+
 parseNickMessage :: IRCParser ()
 parseNickMessage = do
   char ':'
@@ -378,17 +378,17 @@ getMsgContextTime = gets $ msgContextTime . messageContext
 
 -- Putters, same reason
 putIRCState :: IRCState -> IRCParser ()
-putIRCState new = do 
+putIRCState new = do
   old <- get
   put $ old { ircState = new }
 
 putMessageContext :: MessageContext -> IRCParser ()
-putMessageContext new = do 
+putMessageContext new = do
   old <- get
   put $ old { messageContext = new }
 
 putUserMessages :: M.Map User [UserMessage] -> IRCParser ()
-putUserMessages new = do 
+putUserMessages new = do
   old <- getIRCState
   putIRCState $ old { userMessages = new }
 
