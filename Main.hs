@@ -15,6 +15,8 @@ import Control.Monad
 import qualified Data.Map as M
 import qualified Data.Text as T
 import qualified Data.Set as S
+import qualified Data.ByteString as B
+import Data.Text.Encoding
 import qualified Data.Text.IO as TIO
 
 server :: String
@@ -49,7 +51,7 @@ main = do
 
 write :: Handle -> T.Text -> T.Text -> IO ()
 write h s t = do
-  TIO.hPutStr h $ T.concat [s, " ", t, "\r\n"]
+  B.hPutStr h $ encodeUtf8 $ T.concat [s, " ", t, "\r\n"]
   TIO.putStrLn $ T.concat [">  ", s, " ", t]
 
 listen :: Handle -> IRCState -> IO ()
@@ -57,7 +59,7 @@ listen h st = do
   inputAvailable <- hWaitForInput h 1000
   nst <- (if inputAvailable
           then (do
-                   t <- TIO.hGetLine h
+                   t <- fmap decodeUtf8 $ B.hGetLine h
                    let s = T.init t
                    nst <- eval h s st
                    TIO.putStrLn s
