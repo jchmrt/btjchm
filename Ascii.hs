@@ -31,6 +31,10 @@ messageZwaarleven =
   , PrivMsg "|                  |"
   , PrivMsg "| 999999999999 KG  |  <--- Jouw leven"
   , PrivMsg "|__________________|"]
+  
+messageLenny :: [IRCAction]
+messageLenny =
+  [ PrivMsg "( ͡° ͜ʖ ͡°)"]
 
 toAscii :: Char -> [String]
 toAscii 'a' = [ "     "
