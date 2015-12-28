@@ -3,7 +3,8 @@ module Ascii ( toAscii
              , messageOk
              , messagePls
              , messageN1
-             , messageZwaarleven) where
+             , messageZwaarleven
+             , messageLenny) where
 
 import Core
 
