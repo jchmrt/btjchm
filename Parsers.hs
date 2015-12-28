@@ -128,6 +128,7 @@ parsePrivateMessage = do
     "!pls"       -> return messagePls
     "n1"         -> return messageN1
     "#zwaarleven" -> return messageZwaarleven
+    "!lenny"     -> return messageLenny
     "--key--"    -> do key <- getKey
                        return [Debug $ T.concat
                                [ "--- Key ---\n", key
