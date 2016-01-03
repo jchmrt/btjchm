@@ -4,6 +4,8 @@ module Ascii ( toAscii
              , messagePls
              , messageN1
              , messageZwaarleven
+             , messageHoera
+             , messageTable
              , messageLenny) where
 
 import Core
@@ -33,6 +35,15 @@ messageZwaarleven =
   , PrivMsg "| 999999999999 KG  |  <--- Jouw leven"
   , PrivMsg "|__________________|"]
   
+messageHoera :: [IRCAction]
+messageHoera =
+  [ PrivMsg "Hoera!"]
+
+messageTable :: [IRCAction]
+messageTable =
+  [ PrivMsg "(╯°□°）╯︵ ┻━┻ "]
+
+
 messageLenny :: [IRCAction]
 messageLenny =
   [ PrivMsg "( ͡° ͜ʖ ͡°)"]
