@@ -41,4 +41,5 @@ List of commands:
 | !ok        | Prints "OK" in ASCII-art                                  |
 | !pls       | Prints "PLS" in ASCII-art                                 |
 | n1         | Prints "N1" in ASCII-art                                  |
-| !lenny     | Prints a lenny face:  ( ͡° ͜ʖ ͡°) 
+| !lenny     | Prints a lenny face:  ( ͡° ͜ʖ ͡°)                            |
+| !tableflip | Prints a table flip: (╯°□°）╯︵ ┻━┻                       |
