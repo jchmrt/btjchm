@@ -129,6 +129,7 @@ parsePrivateMessage = do
     "n1"         -> return messageN1
     "#zwaarleven" -> return messageZwaarleven
     "!lenny"     -> return [PrivMsg "( ͡° ͜ʖ ͡°)"]
+    "!tableflip" -> return [PrivMsg "(╯°□°）╯︵ ┻━┻"]
     "--key--"    -> do key <- getKey
                        return [Debug $ T.concat
                                [ "--- Key ---\n", key
