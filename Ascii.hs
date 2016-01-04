@@ -3,8 +3,7 @@ module Ascii ( toAscii
              , messageOk
              , messagePls
              , messageN1
-             , messageZwaarleven
-             , messageLenny) where
+             , messageZwaarleven) where
 
 import Core
 
@@ -33,10 +32,6 @@ messageZwaarleven =
   , PrivMsg "| 999999999999 KG  |  <--- Jouw leven"
   , PrivMsg "|__________________|"]
   
-messageLenny :: [IRCAction]
-messageLenny =
-  [ PrivMsg "( ͡° ͜ʖ ͡°)"]
-
 toAscii :: Char -> [String]
 toAscii 'a' = [ "     "
               , " /\\  "
