@@ -160,7 +160,7 @@ parseCommandTell = do
 
   userMsgs <- getUserMessages
   putUserMessages (M.insertWith (++) recipient [userMsg] userMsgs)
-  return [PrivMsg "I will tell it them, as soon as i see them"]
+  return [PrivMsg "I will tell it to them, as soon as I see them"]
 
 parseCommandAfk :: IRCParser [IRCAction]
 parseCommandAfk = do
