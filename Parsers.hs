@@ -251,7 +251,7 @@ parseCommandRemind = do
                                                   ,": ", msg]])
   timeMsg <- createTimeString actionTime
   return [PrivMsg $ T.concat [ "Okay, I will remind "
-                             , recipient
+                             , recipient'
                              , " on "
                              , T.pack timeMsg]]
 
