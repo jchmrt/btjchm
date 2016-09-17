@@ -196,9 +196,9 @@ parseCommandBack :: IRCParser [IRCAction]
 parseCommandBack = do
   sender <- getMsgContextSenderNick
   isAfk <- (isJust . M.findWithDefault Nothing sender) <$> getOnlineUsers
-  if isAfk then (do removeAfkUser sender
-                    return [PrivMsg "Welcome back!"])
-           else (return [PrivMsg "Welcome back!"])
+  if isAfk user then removeAfk user
+                else return ()
+  return [PrivMsg "Welcome back!"]
 
 parseCommandChoose :: IRCParser [IRCAction]
 parseCommandChoose = do
