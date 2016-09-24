@@ -57,10 +57,10 @@ toAscii 'g' = [ " __ "
 toAscii 'h' = [ "    "
               , "|_| "
               , "| | "]
-toAscii 'i' = [ " . "
+toAscii 'i' = [ "   "
               , " | "
               , " | "]
-toAscii 'j' = [ " .  "
+toAscii 'j' = [ "    "
               , " |  "
               , "_/  "]
 toAscii 'k' = [ "   "
