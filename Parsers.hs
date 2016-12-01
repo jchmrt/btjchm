@@ -116,6 +116,7 @@ parsePrivateMessage = do
     "!where"     -> parseCommandWhere
     "!back"      -> parseCommandBack
     "!rug"       -> parseCommandBack    --stupid dutch inside joke
+    "!brak"      -> parseCommandBack    --another stupid dutch joke
     "!choose"    -> parseCommandChoose
     "!answer"    -> parseCommandAnswer
     "!remind"    -> parseCommandRemind
