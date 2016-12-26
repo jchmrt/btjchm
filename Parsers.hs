@@ -216,7 +216,7 @@ parseCommandMemorial = do
   memorialMessage <- many1 $ parseEntity
   return [ PrivMsg "#-------------#"
          , PrivMsg "  IN MEMORIAM  "
-         , PrivMsg $ T.concat [memorialMessage]
+         , PrivMsg $ T.concat memorialMessage
          , PrivMsg "#-------------#"]
 
 parseCommandAnswer :: IRCParser [IRCAction]
