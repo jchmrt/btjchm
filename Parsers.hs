@@ -123,6 +123,7 @@ parsePrivateMessage = do
     "!waitforit" -> parseCommandWaitForIt
     "!whatsnew"  -> return newsMessage
     "!say"       -> parseCommandSay
+    "!memorial"  -> parseCommandMemorial
     "!rejoin"    -> return [ReJoin]
     "!ascii"     -> parseCommandAscii
     "!ok"        -> return messageOk
@@ -209,6 +210,14 @@ parseCommandChoose = do
         return (xs !! i)
   choice <- choose choices
   return [PrivMsg $ T.concat ["I decided on: ", bold, choice]]
+
+parseCommandMemorial :: IRCParser [IRCAction]
+parseCommandMemorial = do
+  memorialMessage <- many1 $ parseEntity
+  return [ PrivMsg "#-------------#"
+         , PrivMsg "  IN MEMORIAM  "
+         , PrivMsg $ T.concat [memorialMessage]
+         , PrivMsg "#-------------#"]
 
 parseCommandAnswer :: IRCParser [IRCAction]
 parseCommandAnswer = do
