@@ -96,7 +96,7 @@ introMessage = [PrivMsg $ T.concat
                 , "!whatsnew", reset]]
 newsMessage =
   [PrivMsg "What's new in btjchm: \
-           \You can now let me choose for you with the !choose command"]
+           \You can now let me put text in a box for you with !sign."]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
@@ -123,6 +123,7 @@ parsePrivateMessage = do
     "!waitforit" -> parseCommandWaitForIt
     "!whatsnew"  -> return newsMessage
     "!say"       -> parseCommandSay
+    "!box"       -> parseCommandBox
     "!memorial"  -> parseCommandMemorial
     "!rejoin"    -> return [ReJoin]
     "!ascii"     -> parseCommandAscii
@@ -211,24 +212,24 @@ parseCommandChoose = do
   choice <- choose choices
   return [PrivMsg $ T.concat ["I decided on: ", bold, choice]]
 
+box :: [T.Text] -> [T.Text]
+box lines = separator : boxedLines ++ [separator]
+  where
+    len = maximum $ map T.length lines
+    separator = T.concat ["#-", T.replicate len "-", "-#"]
+    boxedLines = map (\line ->
+                        T.concat ["| ", T.center len ' ' line, " |"])
+                     lines
+
+parseCommandBox :: IRCParser [IRCAction]
+parseCommandBox = do
+  lines <- many1 parseEntity
+  return $ map PrivMsg $ box lines
+
 parseCommandMemorial :: IRCParser [IRCAction]
 parseCommandMemorial = do
   memorialMessage <- many1 anyChar
-  let inMemoriamTxt = "IN MEMORIAM"
-      innerLength = max (length inMemoriamTxt) (length memorialMessage)
-      separator = T.concat ["#-",
-                            T.replicate innerLength "-",
-                            "-#"]
-      inMemoriam = T.concat ["| ",
-                             T.center innerLength ' ' $ T.pack inMemoriamTxt,
-                             " |"]
-      message = T.concat ["| ",
-                          T.center innerLength ' ' $ T.pack memorialMessage,
-                          " |"]
-  return [ PrivMsg separator
-         , PrivMsg inMemoriam
-         , PrivMsg message
-         , PrivMsg separator]
+  return $ map PrivMsg $ box ["IN MEMORIAM", T.pack memorialMessage]
 
 parseCommandAnswer :: IRCParser [IRCAction]
 parseCommandAnswer = do
