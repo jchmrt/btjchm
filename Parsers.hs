@@ -213,11 +213,22 @@ parseCommandChoose = do
 
 parseCommandMemorial :: IRCParser [IRCAction]
 parseCommandMemorial = do
-  memorialMessage <- many1 $ parseEntity
-  return [ PrivMsg "#-------------#"
-         , PrivMsg "  IN MEMORIAM  "
-         , PrivMsg $ T.concat memorialMessage
-         , PrivMsg "#-------------#"]
+  memorialMessage <- many1 anyChar
+  let inMemoriamTxt = "IN MEMORIAM"
+      innerLength = max (length inMemoriamTxt) (length memorialMessage)
+      separator = T.concat ["#-",
+                            T.replicate innerLength "-",
+                            "-#"]
+      inMemoriam = T.concat ["| ",
+                             T.center innerLength ' ' $ T.pack inMemoriamTxt,
+                             " |"]
+      message = T.concat ["| ",
+                          T.center innerLength ' ' $ T.pack memorialMessage,
+                          " |"]
+  return [ PrivMsg separator
+         , PrivMsg inMemoriam
+         , PrivMsg message
+         , PrivMsg separator]
 
 parseCommandAnswer :: IRCParser [IRCAction]
 parseCommandAnswer = do
