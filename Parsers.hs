@@ -128,6 +128,7 @@ parsePrivateMessage = do
     "!memorial"  -> parseCommandMemorial
     "!rejoin"    -> return [ReJoin]
     "!ascii"     -> parseCommandAscii
+    "!c"         -> parseCommandCalc -- shorthand
     "!calc"      -> parseCommandCalc
     "!ok"        -> return messageOk
     "!pls"       -> return messagePls
