@@ -4,6 +4,7 @@ module Calc ( calculate ) where
 import qualified Data.Text as T
 import Text.Parsec
 import Text.Parsec.String
+import Data.Fixed
 
 -- |Look up an Identifier
 lookupId :: String -> Double
@@ -29,6 +30,7 @@ lookupOp :: Char -> [Double] -> [Double]
 lookupOp '^' = binOp (**)
 lookupOp '*' = binOp (*)
 lookupOp '/' = binOp (/)
+lookupOp '%' = binOp mod'
 lookupOp '+' = binOp (+)
 lookupOp '-' = binOp (-)
 lookupOp _   = binOp (\_ _ -> nan)
@@ -129,6 +131,7 @@ operator :: Parser Token
 operator = (Operator 4 <$> char '^')
            <|> (Operator 3 <$> char '*')
            <|> (Operator 3 <$> char '/')
+           <|> (Operator 3 <$> char '%')
            <|> (Operator 2 <$> char '+')
            <|> (Operator 2 <$> char '-')
 

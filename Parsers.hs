@@ -97,7 +97,7 @@ introMessage = [PrivMsg $ T.concat
                 , "!whatsnew", reset]]
 newsMessage =
   [PrivMsg "What's new in btjchm: \
-           \You can now let me put text in a box for you with !sign."]
+           \You can now let me calculate things for you using !calc <expr>!"]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
