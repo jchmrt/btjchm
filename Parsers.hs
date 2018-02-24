@@ -11,6 +11,7 @@ module Parsers ( User
 import Core
 import Color
 import Ascii
+import Calc
 import Control.Applicative ((<$>))
 import qualified Control.Applicative as A
 import Control.Monad.State.Lazy
@@ -127,6 +128,7 @@ parsePrivateMessage = do
     "!memorial"  -> parseCommandMemorial
     "!rejoin"    -> return [ReJoin]
     "!ascii"     -> parseCommandAscii
+    "!calc"      -> parseCommandCalc
     "!ok"        -> return messageOk
     "!pls"       -> return messagePls
     "n1"         -> return messageN1
@@ -302,6 +304,14 @@ parseCommandAscii = do
             then map PrivMsg $ map T.pack $ foldl1' (zipWith (++))
                  $ map toAscii $ map toLower txt
             else []
+
+parseCommandCalc :: IRCParser [IRCAction]
+parseCommandCalc = do
+  arg <- many1 anyChar
+  let res = calculate arg
+  return (if length arg == 0
+          then []
+          else [PrivMsg res])
 
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
