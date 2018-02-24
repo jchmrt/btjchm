@@ -9,6 +9,7 @@ import Data.Fixed
 -- |Look up an Identifier
 lookupId :: String -> Double
 lookupId "pi" = pi
+lookupId "e"  = exp 1
 lookupId _    = nan
 
 -- |Look up a Function
