@@ -130,6 +130,7 @@ parsePrivateMessage = do
     "!ascii"     -> parseCommandAscii
     "!c"         -> parseCommandCalc -- shorthand
     "!calc"      -> parseCommandCalc
+    "!mock"      -> parseCommandMock
     "!ok"        -> return messageOk
     "!pls"       -> return messagePls
     "n1"         -> return messageN1
@@ -313,6 +314,22 @@ parseCommandCalc = do
   return (if length arg == 0
           then []
           else [PrivMsg res])
+
+parseCommandMock :: IRCParser [IRCAction]
+parseCommandMock = do
+  arg <- many1 anyChar
+  return [PrivMsg $ T.pack $ mock arg]
+
+switchCase :: Char -> Char
+switchCase x
+  | isUpper x = toLower x
+  | isLower x = toUpper x
+  | otherwise = x
+
+mock :: String -> String
+mock (x:y:xs) = switchCase x : y : mock xs
+mock xs       = xs
+
 
 parseNicksMessage :: IRCParser ()
 parseNicksMessage = do
