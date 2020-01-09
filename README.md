@@ -43,3 +43,4 @@ List of commands:
 | n1         | Prints "N1" in ASCII-art                                  |
 | !lenny     | Prints a lenny face:  ( ͡° ͜ʖ ͡°)                            |
 | !tableflip | Prints a table flip: (╯°□°）╯︵ ┻━┻                       |
+| !beschrijf | Describes the input arguments per symbol                  |

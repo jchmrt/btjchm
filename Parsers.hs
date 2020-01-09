@@ -11,6 +11,7 @@ module Parsers ( User
 import Core
 import Color
 import Ascii
+import Beschrijver
 import Calc
 import Control.Applicative ((<$>))
 import qualified Control.Applicative as A
@@ -314,6 +315,11 @@ parseCommandCalc = do
   return (if length arg == 0
           then []
           else [PrivMsg res])
+
+parseCommandBeschrijf :: IRCParser [IRCAction]
+parseCommandBeschrijf = do
+    arg <- many1 anyChar
+    return [PrivMsg $ T.pack $ beschrijfSentence arg]
 
 parseCommandMock :: IRCParser [IRCAction]
 parseCommandMock = do
