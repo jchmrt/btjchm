@@ -1,8 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
 module Beschrijver ( beschrijfSentence ) where
 
 import Core
-import Debug.Trace
 
 beschrijf :: Char -> String
 beschrijf ' ' = "een spatie"
