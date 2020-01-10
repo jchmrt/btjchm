@@ -98,7 +98,7 @@ introMessage = [PrivMsg $ T.concat
                 , "!whatsnew", reset]]
 newsMessage =
   [PrivMsg "What's new in btjchm: \
-           \You can now let me calculate things for you using !calc <expr>!"]
+           \Ik kan nu strings beschrijven met het !beschrijf commando!"]
 
 parsePrivateMessage :: IRCParser [IRCAction]
 parsePrivateMessage = do
@@ -132,6 +132,7 @@ parsePrivateMessage = do
     "!c"         -> parseCommandCalc -- shorthand
     "!calc"      -> parseCommandCalc
     "!mock"      -> parseCommandMock
+    "!beschrijf" -> parseCommandBeschrijf
     "!ok"        -> return messageOk
     "!pls"       -> return messagePls
     "n1"         -> return messageN1
