@@ -1,0 +1,14 @@
+[Unit]
+Description=btjchm irc bot service
+Documentation=https://github.com/jchmrt/btjchm
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/btjchm/
+ExecStart=/opt/btjchm/dist/build/btjchm/btjchm
+Restart=on-failure
+User=btjchm
+
+[Install]
+WantedBy=multi-user.target
