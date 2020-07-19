@@ -6,7 +6,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/btjchm/
-ExecStart=/bin/sh /opt/btjchm/btjchm.sh
+ExecStart=/opt/btjchm/dist/build/btjchm/btjchm
 Restart=on-failure
 User=btjchm
 
