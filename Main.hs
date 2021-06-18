@@ -20,11 +20,11 @@ import Data.Text.Encoding
 import qualified Data.Text.IO as TIO
 
 server :: String
-server  = "irc.freenode.org"
+server  = "irc.libera.chat"
 port :: Int
 port    = 6667
 chan,stdNick,user,usermsg :: T.Text
-chan    = "#eras"
+chan    = "##eras"
 stdNick = "btjchm"
 user    = " 0 * :jchmrt's bot"
 usermsg = T.concat [stdNick,user]
